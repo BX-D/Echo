@@ -1,0 +1,31 @@
+.DS_Store
+
+# Local environment
+.env
+.claude/
+
+# Runtime data
+fear_engine.db
+fear_engine.db-shm
+fear_engine.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Rust
+**/target/
+
+# Frontend dependencies and builds
+frontend/node_modules/
+frontend/.npm-cache/
+frontend/dist/
+frontend/.playwright-browsers/
+frontend/playwright-report/
+frontend/test-results/
+frontend/coverage/
+*.tsbuildinfo
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp

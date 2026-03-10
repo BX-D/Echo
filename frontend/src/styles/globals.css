@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CSS Custom Properties — Horror Design System
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Palette ──────────────────────────────────────────────────────────── */
+  --color-void: #0a0a0a;
+  --color-shadow: #1a1a1a;
+  --color-ash: #2a2a2a;
+  --color-smoke: #666666;
+  --color-bone: #d4d0c8;
+  --color-parchment: #e8e0d4;
+  --color-blood: #8b0000;
+  --color-rust: #a0522d;
+  --color-bile: #556b2f;
+  --color-clinical: #f0f8ff;
+  --color-bruise: #4a0e4e;
+  --color-gangrene: #2f4f4f;
+
+  /* ── Functional tokens ────────────────────────────────────────────────── */
+  --bg-primary: var(--color-void);
+  --bg-secondary: var(--color-shadow);
+  --text-primary: var(--color-bone);
+  --text-secondary: var(--color-smoke);
+  --text-highlight: var(--color-parchment);
+  --accent-danger: var(--color-blood);
+  --accent-unease: var(--color-bile);
+
+  /* ── Typography ───────────────────────────────────────────────────────── */
+  --font-horror: "Special Elite", "Creepster", monospace;
+  --font-body: "IBM Plex Mono", monospace;
+  --font-title: "Creepster", "Special Elite", monospace;
+
+  /* ── Spacing ──────────────────────────────────────────────────────────── */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --space-xl: 4rem;
+
+  /* ── Transitions ──────────────────────────────────────────────────────── */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 600ms ease;
+
+  /* ── Effects ──────────────────────────────────────────────────────────── */
+  --vignette-opacity: 0.6;
+  --crt-opacity: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Base Styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(circle at top, rgba(255,255,255,0.045), transparent 26%),
+    linear-gradient(to bottom, rgba(255,255,255,0.02), transparent 18%);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  scroll-behavior: smooth;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.intelligence-grid {
+  position: relative;
+}
+
+.intelligence-grid::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(circle at center, black 18%, transparent 88%);
+  opacity: 0.22;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-ash);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-smoke);
+}
+
+/* ── Selection ──────────────────────────────────────────────────────────── */
+::selection {
+  background: var(--accent-danger);
+  color: var(--text-primary);
+}
+
+/* ── Focus ──────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 1px solid var(--color-smoke);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  :root {
+    --space-lg: 1.5rem;
+    --space-xl: 2.5rem;
+  }
+}

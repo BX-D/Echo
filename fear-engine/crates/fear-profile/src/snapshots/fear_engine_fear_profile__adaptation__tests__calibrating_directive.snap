@@ -1,0 +1,28 @@
+---
+source: crates/fear-profile/src/adaptation.rs
+assertion_line: 646
+expression: json
+---
+{
+  "strategy": {
+    "strategy": "probe",
+    "target_fears": [
+      "claustrophobia",
+      "isolation",
+      "body_horror"
+    ],
+    "intensity": 0.3
+  },
+  "intensity_target": 0.25,
+  "primary_fear": "claustrophobia",
+  "secondary_fears": [
+    "isolation",
+    "body_horror"
+  ],
+  "specific_instruction": "Introduce subtle elements that test the player's reaction to: claustrophobia, isolation, body_horror. Keep it atmospheric — don't be overt. (0 observations so far.)",
+  "forbidden_elements": [
+    "No jump scares",
+    "No extreme horror",
+    "No meta-horror or fourth-wall breaks"
+  ]
+}

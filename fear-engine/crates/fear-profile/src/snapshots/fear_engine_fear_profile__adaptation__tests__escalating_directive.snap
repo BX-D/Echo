@@ -1,0 +1,22 @@
+---
+source: crates/fear-profile/src/adaptation.rs
+assertion_line: 654
+expression: json
+---
+{
+  "strategy": {
+    "strategy": "layering",
+    "base_fear": "claustrophobia",
+    "amplifier_fear": "isolation",
+    "blend_ratio": 0.6
+  },
+  "intensity_target": 0.5666666666666667,
+  "primary_fear": "claustrophobia",
+  "secondary_fears": [
+    "isolation"
+  ],
+  "specific_instruction": "Combine claustrophobia with isolation for maximum effect. Describe spaces getting smaller, walls pressing in, doors that won't open. Layer on top: Emphasise emptiness, silence, distance from help or other people. The combination should feel inescapable.",
+  "forbidden_elements": [
+    "Avoid pure calm scenes (save for contrast beats)"
+  ]
+}

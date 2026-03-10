@@ -1,0 +1,25 @@
+---
+source: crates/fear-profile/src/scorer.rs
+assertion_line: 583
+expression: sorted
+---
+- - abandonment
+  - "0.7081"
+- - body_horror
+  - "0.8481"
+- - claustrophobia
+  - "0.9500"
+- - darkness
+  - "0.9500"
+- - doppelganger
+  - "0.9068"
+- - isolation
+  - "0.6226"
+- - loss_of_control
+  - "0.9500"
+- - sound_based
+  - "0.8436"
+- - stalking
+  - "0.9449"
+- - uncanny_valley
+  - "0.9068"

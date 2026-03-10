@@ -1,0 +1,21 @@
+[package]
+name = "fear-engine-common"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+# Optional: enabled by downstream crates for From<Error> impls
+rusqlite = { version = "0.32", features = ["bundled"], optional = true }
+reqwest = { version = "0.12", optional = true }
+
+[dev-dependencies]
+proptest = "1"
+
+[features]
+default = []

@@ -1,0 +1,61 @@
+---
+source: crates/ai-integration/src/prompt/mod.rs
+assertion_line: 192
+expression: msg
+---
+PLAYER PSYCHOLOGICAL PROFILE:
+- Primary fear axis: darkness (score: 78%, confidence: 65%)
+- Secondary fears: stalking (62%)
+- Anxiety baseline: 0.65/1.0
+- Behavioral pattern: cautious explorer
+- Current emotional state: tense
+
+NARRATIVE DIRECTIVE:
+Strategy: Probe
+Instruction: Introduce subtle elements that test the player's reaction to: claustrophobia, isolation, body_horror. Keep it atmospheric — don't be overt. (0 observations so far.)
+Target intensity: 0.40/1.0
+Forbidden: No meta-horror yet
+
+GAME STATE:
+Location: Hospital basement
+Surface medium: archive
+Trust posture: clinical
+Phase: exploring (scene 6/~18)
+Previous scene summary: Discovered a locked ward.
+Player's last action: Tried the door handle
+Active narrative threads: power outage
+Player inventory: flashlight
+Established details: Ward B is sealed
+Surface directive: Return 2-4 archive_entries formatted like recovered records or revised notes. The main narrative should contextualize the archive, not repeat every entry.
+
+Respond with a JSON object matching this schema EXACTLY:
+{
+  "narrative": "string — the scene description text (150-300 words, 2-4 paragraphs)",
+  "atmosphere": "string — one of: dread, tension, panic, calm, wrongness, isolation, paranoia",
+  "sound_cue": "string or null — ambient sound description for the audio engine",
+  "image_prompt": "string or null — detailed image generation prompt (only for key visual moments)",
+  "choices": [
+    {
+      "id": "string — unique choice identifier (lowercase_snake_case)",
+      "text": "string — what the player sees as the choice text",
+      "approach": "string — one of: investigate, avoid, confront, flee, interact, wait",
+      "fear_vector": "string — which fear this choice tests: claustrophobia, isolation, body_horror, stalking, loss_of_control, uncanny_valley, darkness, sound_based, doppelganger, abandonment"
+    }
+  ],
+  "hidden_elements": ["string — subtle fear triggers embedded in the narrative (for analytics, not shown to player)"],
+  "transcript_lines": ["string — only when medium is transcript; short transcript fragments"],
+  "question_prompts": ["string — only when medium is questionnaire; 2-3 prompt blocks"],
+  "archive_entries": ["string — only when medium is archive; 2-4 record entries"],
+  "mirror_observations": ["string — only when medium is mirror/webcam; observed statements about the player"],
+  "intensity": 0.0,
+  "meta_break": null
+}
+
+Rules:
+- "choices" must have 2-4 entries
+- "intensity" is a float from 0.0 to 1.0
+- Unused surface arrays should be empty arrays, not omitted
+- "meta_break" is null unless specifically directed to break the fourth wall
+- If meta_break is used: {"text": "string", "target": "title|overlay|whisper|glitch_text"}
+
+Generate the next scene.

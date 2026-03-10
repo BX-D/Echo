@@ -1,0 +1,31 @@
+[package]
+name = "fear-engine-server"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "fear-engine-server"
+path = "src/main.rs"
+
+[dependencies]
+fear-engine-common = { workspace = true }
+fear-engine-storage = { workspace = true }
+fear-engine-core = { workspace = true }
+fear-engine-fear-profile = { workspace = true }
+fear-engine-ai-integration = { workspace = true }
+axum = { version = "0.8", features = ["ws"] }
+tokio = { workspace = true }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+dashmap = "6"
+futures-util = "0.3"
+chrono = { workspace = true }
+reqwest = { version = "0.12", features = ["json"] }
+url = "2"
+
+[dev-dependencies]
+tokio-tungstenite = "0.28"
+http-body-util = "0.1"
