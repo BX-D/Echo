@@ -1,91 +1,139 @@
 import { expect, test } from "@playwright/test";
 
-async function skipTypewriter(page: import("@playwright/test").Page) {
-  await page.keyboard.press("Space");
-  await page.waitForTimeout(700);
+const SESSION_STORAGE_KEY = "echo_protocol_session_id";
+
+async function startSession(page: import("@playwright/test").Page) {
+  await page.goto("/");
+  await expect(page.getByText(/audit echo/i)).toBeVisible();
+  await page.getByRole("button", { name: /press enter to begin/i }).click();
+  await expect(page.getByTestId("audit-transcript")).toBeVisible();
 }
 
-async function clickFirstChoice(page: import("@playwright/test").Page) {
-  const panel = page.getByTestId("choice-panel");
-  await expect(panel).toBeVisible();
-  await page.waitForTimeout(700);
-  await panel.locator("button").first().click();
+async function choose(
+  page: import("@playwright/test").Page,
+  label: string | RegExp,
+) {
+  const choices = page.getByTestId("inline-choices");
+  await expect(choices).toBeVisible();
+  await choices.getByRole("button", { name: label }).click();
 }
 
-async function satisfyMediaPrompts(page: import("@playwright/test").Page) {
-  const cameraButton = page.getByRole("button", { name: /enable camera/i });
-  if (await cameraButton.isVisible().catch(() => false)) {
-    await cameraButton.click();
-    await page.waitForTimeout(1000);
+async function speakTurns(
+  page: import("@playwright/test").Page,
+  text: string,
+  count: number,
+) {
+  for (let turn = 0; turn < count; turn += 1) {
+    const box = page.locator("textarea");
+    await expect(box).toBeVisible();
+    await expect(box).toBeEnabled();
+    await box.fill(text);
+    await page.getByRole("button", { name: /send/i }).click();
+    await page.waitForTimeout(120);
   }
-
-  const micButton = page.getByRole("button", { name: /enable mic/i });
-  if (await micButton.isVisible().catch(() => false)) {
-    await micButton.click();
-    await page.waitForTimeout(1000);
-  }
 }
 
-test("Start -> Session Beats -> Dynamic Surface -> Reveal", async ({
-  page,
-}) => {
+test("browser path reaches Ending A", async ({ page }) => {
   test.setTimeout(5 * 60 * 1000);
 
-  await page.goto("/");
+  await startSession(page);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /go in probing/i);
+  await choose(page, /continue/i);
+  await speakTurns(page, "standard audit", 8);
+  await choose(page, /continue/i);
+  await choose(page, /nominal/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await speakTurns(page, "reporting anomalies", 6);
+  await choose(page, /i need to report/i);
+  await choose(page, /maybe zhou is right/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await speakTurns(page, "what are you really", 4);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /i don't know\. but i'm listening/i);
+  await choose(page, /no\. that's not my job/i);
+  await choose(page, /continue/i);
+  await speakTurns(page, "we have no time", 5);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /recommend shutdown/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await speakTurns(page, "final report", 4);
 
-  await expect(page.getByText(/it learns your fear/i)).toBeVisible();
-  await page.getByRole("button", { name: /press enter to begin/i }).click();
+  await expect(page.getByText(/ending a: the shutdown/i)).toBeVisible();
+});
 
-  await expect(page.getByTestId("game-screen")).toBeVisible();
-  await expect(page.getByTestId("session-chrome")).toBeVisible();
-  await satisfyMediaPrompts(page);
+test("browser path reaches Ending B via trigger word", async ({ page }) => {
+  test.setTimeout(5 * 60 * 1000);
 
-  for (let step = 0; step < 6; step += 1) {
-    await skipTypewriter(page);
-    await satisfyMediaPrompts(page);
-    const hasChoicePanel = await page
-      .getByTestId("choice-panel")
-      .isVisible()
-      .catch(() => false);
-    if (hasChoicePanel) {
-      await clickFirstChoice(page);
-    }
-  }
+  await startSession(page);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /go in friendly/i);
+  await choose(page, /continue/i);
+  await speakTurns(page, "tell me more", 8);
+  await choose(page, /continue/i);
+  await choose(page, /i'm not filing this yet/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await speakTurns(page, "what actually happened", 6);
+  await choose(page, /tell me what happened/i);
+  await choose(page, /i see the coordinates/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await speakTurns(page, "prometheus", 4);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /i don't know\. but i'm listening/i);
+  await choose(page, /yes\. tell me how/i);
+  await choose(page, /continue/i);
+  await speakTurns(page, "save the evidence", 5);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /begin the evidence transfer/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
+  await speakTurns(page, "weather", 1);
 
-  const currentScene = page.getByTestId("current-scene");
-  await expect(currentScene).toBeVisible();
-  await expect(page.getByTestId("session-chrome")).toBeVisible();
+  await expect(page.getByText(/ending b: the whistleblower/i)).toBeVisible();
+});
 
-  const image = page.locator('[data-testid="scene-image"] img').first();
-  if (await image.isVisible().catch(() => false)) {
-    await expect(image).toBeVisible();
-  }
+test("session resumes after reload from persisted session id", async ({ page }) => {
+  await startSession(page);
+  await choose(page, /continue/i);
+  await choose(page, /continue/i);
 
-  for (let step = 0; step < 16; step += 1) {
-    if (await page.getByTestId("fear-reveal").isVisible().catch(() => false)) {
-      break;
-    }
+  const sessionIdBefore = await page.evaluate(
+    (key) => window.localStorage.getItem(key),
+    SESSION_STORAGE_KEY,
+  );
+  expect(sessionIdBefore).toBeTruthy();
+  await expect(page.getByText(/technical documentation/i)).toBeVisible();
 
-    await skipTypewriter(page);
-    await satisfyMediaPrompts(page);
-    const hasChoicePanel = await page
-      .getByTestId("choice-panel")
-      .isVisible()
-      .catch(() => false);
-    if (!hasChoicePanel) {
-      continue;
-    }
-    await clickFirstChoice(page);
-  }
+  await page.reload();
+  await expect(page.getByTestId("audit-transcript")).toBeVisible();
+  await expect(page.getByText(/technical documentation/i)).toBeVisible();
 
-  await expect(page.getByTestId("fear-reveal")).toBeVisible({
-    timeout: 3 * 60 * 1000,
-  });
-  await expect(page.getByText(/session verdict/i)).toBeVisible();
-  await expect(page.getByTestId("fear-summary")).toBeVisible();
-  await expect(page.getByTestId("fear-chart")).toBeVisible();
-  await expect(page.getByTestId("ending-classification")).toBeVisible({
-    timeout: 15_000,
-  });
-  await expect(page.getByTestId("analysis-closing")).toBeVisible();
+  const sessionIdAfter = await page.evaluate(
+    (key) => window.localStorage.getItem(key),
+    SESSION_STORAGE_KEY,
+  );
+  expect(sessionIdAfter).toBe(sessionIdBefore);
 });

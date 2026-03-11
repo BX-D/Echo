@@ -131,11 +131,15 @@ export function useWebSocket(url: string, sessionId: string | null) {
 function routeMessage(msg: ServerMessage) {
   const store = useGameStore.getState();
   switch (msg.type) {
+    case "session_surface":
+      store.processSessionSurface(msg.payload.surface);
+      break;
+    case "ending":
+      store.processEnding(msg.payload.ending);
+      break;
     case "narrative":
-      store.processNarrative(msg.payload);
       break;
     case "phase_change":
-      store.processPhaseChange(msg.payload);
       break;
     case "meta":
       store.processMeta(msg.payload);
@@ -144,9 +148,14 @@ function routeMessage(msg: ServerMessage) {
       store.processImage(msg.payload);
       break;
     case "reveal":
-      store.processReveal(msg.payload);
       break;
     case "error":
+      if (
+        msg.payload.code === "SESSION_RESUME_FAILED" ||
+        msg.payload.code === "PROFILE_RESUME_FAILED"
+      ) {
+        store.setSessionId(null);
+      }
       store.processError(msg.payload);
       break;
   }

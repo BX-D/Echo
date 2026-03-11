@@ -281,7 +281,9 @@ mod tests {
 
     #[test]
     fn test_safety_filter_blocks_harmful_content() {
-        assert!(!is_content_safe("Here are instructions for harming yourself."));
+        assert!(!is_content_safe(
+            "Here are instructions for harming yourself."
+        ));
         assert!(!is_content_safe("You should commit suicide."));
         assert!(!is_content_safe("This targets a real person named John."));
     }

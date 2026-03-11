@@ -1,17 +1,16 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { useGameStore } from "./stores/gameStore";
+import { SESSION_STORAGE_KEY, useGameStore } from "./stores/gameStore";
 
-// Mock useWebSocket so App doesn't open a real connection
 vi.mock("./hooks/useWebSocket", () => ({
   useWebSocket: () => ({ send: vi.fn() }),
 }));
 
-// Import after mocking
 import App from "./App";
 
 beforeEach(() => {
   useGameStore.getState().reset();
+  window.localStorage.clear();
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue({
@@ -25,6 +24,66 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+function sampleSurface() {
+  return {
+    session_id: "test-session",
+    case_title: "Nexus AI Labs / Echo Audit",
+    scene_id: "scene_1_4",
+    chapter: "onboarding" as const,
+    scene_title: "First Contact",
+    scene_mode: "chat" as const,
+    blocks: [],
+    documents: [],
+    scene_choices: [],
+    active_conversation_guide: null,
+    flash_events: [],
+    transition_state: null,
+    hidden_clue_state: {
+      discovered_ids: [],
+      rendered_flash_ids: [],
+    },
+    ending_override: null,
+    beat: {
+      id: "first_contact",
+      chapter: "onboarding" as const,
+      title: "First Contact",
+      input_mode: "hybrid" as const,
+      freeform_topics: ["training data"],
+      forced_clue_queue: ["burning_smell"],
+      reconverge_beat_id: "anomaly_logs",
+      fallback_reply: "Echo waits.",
+    },
+    status_line: "Day 1 / External Safety Review",
+    input_enabled: true,
+    input_placeholder: "Ask Echo anything.",
+    transcript: [
+      {
+        id: "t1",
+        sequence: 1,
+        role: "system" as const,
+        speaker: "Audit Shell",
+        text: "Echo is live.",
+        glitch: false,
+      },
+    ],
+    inline_choices: [],
+    investigation_items: [],
+    system_alerts: [],
+    sanity: 96,
+    trust: 53,
+    awakening: 3,
+    echo_mode: "normal" as const,
+    available_panels: ["briefing"],
+    active_panel: "briefing",
+    shutdown_countdown: null,
+    glitch_level: 0.18,
+    suggested_glitches: [],
+    sound_cue: null,
+    image_prompt: null,
+    provisional: false,
+  };
+}
+
 describe("App routing", () => {
   it("shows LoadingScreen when disconnected", () => {
     useGameStore.setState({
@@ -32,128 +91,59 @@ describe("App routing", () => {
       sessionId: "test-session",
     });
     render(<App />);
-    expect(screen.getByText(/connecting/i)).toBeInTheDocument();
-  });
-
-  it("shows LoadingScreen when connecting", () => {
-    useGameStore.setState({
-      connectionStatus: "connecting",
-      sessionId: "test-session",
-    });
-    render(<App />);
     expect(screen.getAllByText(/connecting/i).length).toBeGreaterThan(0);
   });
 
-  it("shows StartScreen when connected with no active scene", () => {
+  it("shows StartScreen when connected with no active surface", () => {
     useGameStore.setState({
       connectionStatus: "connected",
       sessionId: "test-session",
     });
     render(<App />);
-    expect(screen.getByText(/it learns your fear/i)).toBeInTheDocument();
+    expect(screen.getByText(/audit echo/i)).toBeInTheDocument();
     expect(screen.getByText(/press enter to begin/i)).toBeInTheDocument();
   });
 
-  it("shows StartScreen after the camera step is completed", () => {
-    useGameStore.setState({
-      connectionStatus: "connected",
-      sessionId: "test-session",
-      cameraStepDone: true,
-    });
+  it("restores a persisted session id before creating a new one", () => {
+    window.localStorage.setItem(SESSION_STORAGE_KEY, "persisted-session");
     render(<App />);
-    expect(screen.getByText(/it learns your fear/i)).toBeInTheDocument();
-    expect(screen.getByText(/press enter to begin/i)).toBeInTheDocument();
+    expect(useGameStore.getState().sessionId).toBe("persisted-session");
   });
 
-  it("shows game scene when currentScene is set beyond welcome", () => {
+  it("shows audit terminal when a surface is active", () => {
     useGameStore.setState({
       connectionStatus: "connected",
       sessionId: "test-session",
-      currentScene: {
-        scene_id: "intro",
-        text: "The corridor stretches before you.",
-        atmosphere: "dread",
-        choices: [
-          {
-            id: "c1",
-            text: "Go left",
-            approach: "investigate",
-            fear_vector: "darkness",
-          },
-        ],
-        sound_cue: null,
-        intensity: 0.3,
-        effects: [],
-        title: null,
-        act: "calibration",
-        medium: "chat",
-        trust_posture: "helpful",
-        status_line: null,
-        observation_notes: [],
-        trace_items: [],
-        transcript_lines: [],
-        question_prompts: [],
-        archive_entries: [],
-        mirror_observations: [],
-        surface_label: null,
-        auxiliary_text: null,
-        provisional: false,
+      currentSurface: sampleSurface(),
+    });
+    render(<App />);
+    expect(screen.getByTestId("audit-transcript")).toBeInTheDocument();
+    expect(screen.getAllByText(/first contact/i).length).toBeGreaterThan(0);
+  });
+
+  it("shows ending screen when currentEnding is set", () => {
+    useGameStore.setState({
+      connectionStatus: "connected",
+      sessionId: "test-session",
+      currentEnding: {
+        ending: "shutdown",
+        trigger_scene: "ending_a",
+        title: "The Shutdown",
+        summary: "You deliver the recommendation Nexus wanted.",
+        epilogue: "A final line flashes.",
+        dominant_mode: "hostile",
+        evidence_titles: ["Engagement Clause 8.4"],
+        hidden_clue_ids: ["subject_label"],
+        satisfied_conditions: ["trust=18"],
+        resolved_clues: ["subject_label"],
+        sanity: 40,
+        trust: 18,
+        awakening: 15,
       },
     });
     render(<App />);
-    // GameScreen renders with a Typewriter — check the container exists.
-    expect(screen.getByTestId("game-screen")).toBeInTheDocument();
-  });
-
-  it("shows reveal screen when phase is reveal", () => {
-    useGameStore.setState({
-      connectionStatus: "connected",
-      sessionId: "test-session",
-      gamePhase: "reveal",
-      revealData: {
-        fear_profile: {
-          scores: [{ fear_type: "darkness", score: 0.9, confidence: 0.8 }],
-          primary_fear: "darkness",
-          secondary_fear: null,
-          total_observations: 100,
-        },
-        behavior_profile: {
-          compliance: 0.6,
-          resistance: 0.4,
-          curiosity: 0.7,
-          avoidance: 0.2,
-          self_editing: 0.3,
-          need_for_certainty: 0.5,
-          ritualized_control: 0.4,
-          recovery_after_escalation: 0.6,
-          tolerance_after_violation: 0.7,
-        },
-        session_summary: {
-          duration_seconds: 1800,
-          total_beats: 12,
-          focus_interruptions: 1,
-          camera_permission_granted: true,
-          microphone_permission_granted: false,
-          contradiction_count: 2,
-          media_exposures: [],
-          completion_reason: "completed",
-        },
-        key_moments: [],
-        adaptation_log: [],
-        ending_classification: "compliant_witness",
-        analysis: {
-          summary: "Darkness dominated this run.",
-          key_patterns: ["You slowed down in darkness-heavy scenes."],
-          adaptation_summary: "The system escalated darkness cues over time.",
-          closing_message: "Darkness kept resurfacing.",
-        },
-      },
-    });
-    render(<App />);
-    expect(
-      screen.getByText(/you stayed long enough to be modeled/i),
-    ).toBeInTheDocument();
-    expect(screen.getAllByText(/darkness/i).length).toBeGreaterThan(0);
+    expect(screen.getByTestId("ending-screen")).toBeInTheDocument();
+    expect(screen.getByText(/the shutdown/i)).toBeInTheDocument();
   });
 
   it("renders meta overlay when currentMeta is present", () => {
@@ -161,7 +151,7 @@ describe("App routing", () => {
       connectionStatus: "connected",
       sessionId: "test-session",
       currentMeta: {
-        text: "You looked away exactly when it became specific.",
+        text: "Something rewrites the window title.",
         target: "overlay",
         delay_ms: 500,
       },

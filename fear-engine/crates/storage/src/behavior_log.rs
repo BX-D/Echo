@@ -49,11 +49,7 @@ impl Database {
     /// db.insert_behavior_events(&sid, &events).unwrap();
     /// assert_eq!(db.count_behavior_events(&sid).unwrap(), 1);
     /// ```
-    pub fn insert_behavior_events(
-        &self,
-        session_id: &str,
-        events: &[BehaviorEvent],
-    ) -> Result<()> {
+    pub fn insert_behavior_events(&self, session_id: &str, events: &[BehaviorEvent]) -> Result<()> {
         let conn = self.get_conn()?;
         let tx = conn.unchecked_transaction()?;
         {
@@ -65,7 +61,13 @@ impl Database {
                 let type_name = event_type_name(&event.event_type);
                 let data_json = serde_json::to_string(&event.event_type)?;
                 let ts = format_timestamp(&event.timestamp);
-                stmt.execute(params![session_id, type_name, data_json, event.scene_id, ts])?;
+                stmt.execute(params![
+                    session_id,
+                    type_name,
+                    data_json,
+                    event.scene_id,
+                    ts
+                ])?;
             }
         }
         tx.commit()?;

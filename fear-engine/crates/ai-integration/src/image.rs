@@ -185,11 +185,9 @@ impl ImageClient {
             .await
             .map_err(|e| FearEngineError::Serialization(e.to_string()))?;
 
-        let base64 = json["data"][0]["b64_json"]
-            .as_str()
-            .ok_or_else(|| {
-                FearEngineError::ImageGeneration("missing b64_json in response".into())
-            })?;
+        let base64 = json["data"][0]["b64_json"].as_str().ok_or_else(|| {
+            FearEngineError::ImageGeneration("missing b64_json in response".into())
+        })?;
 
         Ok(ImageResult {
             data_url: format!("data:image/png;base64,{base64}"),
@@ -263,7 +261,10 @@ mod tests {
             .await;
 
         let client = ImageClient::with_base_url("key".into(), server.uri());
-        let result = client.generate("dark room", Some(&FearType::Darkness)).await.unwrap();
+        let result = client
+            .generate("dark room", Some(&FearType::Darkness))
+            .await
+            .unwrap();
         assert!(result.is_some());
         let img = result.unwrap();
         assert!(img.data_url.starts_with("data:image/png;base64,"));
@@ -306,9 +307,7 @@ mod tests {
     async fn test_image_generation_timeout_graceful() {
         let server = MockServer::start().await;
         Mock::given(method("POST"))
-            .respond_with(
-                ResponseTemplate::new(200).set_delay(std::time::Duration::from_secs(60)),
-            )
+            .respond_with(ResponseTemplate::new(200).set_delay(std::time::Duration::from_secs(60)))
             .mount(&server)
             .await;
 

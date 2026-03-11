@@ -1,4 +1,4 @@
-//! Unified error types for the Fear Engine.
+//! Unified error types for Echo Protocol runtime crates.
 //!
 //! Provides [`FearEngineError`], the single error enum used across all crates, and a
 //! convenience [`Result`] type alias. Automatic conversions from third-party error types
@@ -7,7 +7,7 @@
 
 use thiserror::Error;
 
-/// The unified error type for all Fear Engine operations.
+/// The unified error type for all Echo Protocol runtime operations.
 ///
 /// Each variant captures a distinct failure domain so callers can match on the
 /// category without inspecting error strings.
@@ -90,7 +90,7 @@ pub enum FearEngineError {
     Configuration(String),
 }
 
-/// Convenience alias used throughout the Fear Engine crates.
+/// Convenience alias used throughout the Echo Protocol runtime crates.
 ///
 /// # Example
 ///
@@ -159,7 +159,10 @@ mod tests {
     #[test]
     fn test_image_generation_error_display() {
         let err = FearEngineError::ImageGeneration("NSFW filter triggered".into());
-        assert_eq!(err.to_string(), "Image generation error: NSFW filter triggered");
+        assert_eq!(
+            err.to_string(),
+            "Image generation error: NSFW filter triggered"
+        );
     }
 
     #[test]

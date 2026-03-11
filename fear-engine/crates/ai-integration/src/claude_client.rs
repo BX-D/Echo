@@ -332,10 +332,7 @@ impl ClaudeClient {
             })?
             .to_string();
 
-        let model = body["model"]
-            .as_str()
-            .unwrap_or("unknown")
-            .to_string();
+        let model = body["model"].as_str().unwrap_or("unknown").to_string();
 
         let input_tokens = body["usage"]["input_tokens"].as_u64().unwrap_or(0) as u32;
         let output_tokens = body["usage"]["output_tokens"].as_u64().unwrap_or(0) as u32;
@@ -415,8 +412,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let client =
-            ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
+        let client = ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
         let resp = client.generate(&test_request()).await.unwrap();
         assert_eq!(resp.content, "Hello back!");
         assert_eq!(resp.usage.input_tokens, 10);
@@ -442,8 +438,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let client =
-            ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
+        let client = ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
         let resp = client.generate(&test_request()).await.unwrap();
         assert_eq!(resp.content, "Hello back!");
     }
@@ -465,8 +460,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let client =
-            ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
+        let client = ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
         let resp = client.generate(&test_request()).await.unwrap();
         assert_eq!(resp.content, "Hello back!");
     }
@@ -476,15 +470,12 @@ mod tests {
         let server = MockServer::start().await;
         Mock::given(method("POST"))
             .and(path("/v1/messages"))
-            .respond_with(
-                ResponseTemplate::new(400).set_body_string("bad request"),
-            )
+            .respond_with(ResponseTemplate::new(400).set_body_string("bad request"))
             .expect(1)
             .mount(&server)
             .await;
 
-        let client =
-            ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
+        let client = ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
         let err = client.generate(&test_request()).await.unwrap_err();
         assert!(err.to_string().contains("400"));
     }
@@ -499,8 +490,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let client =
-            ClaudeClient::with_base_url("bad-key".into(), server.uri(), test_config());
+        let client = ClaudeClient::with_base_url("bad-key".into(), server.uri(), test_config());
         let err = client.generate(&test_request()).await.unwrap_err();
         match err {
             FearEngineError::Configuration(msg) => assert!(msg.contains("401")),
@@ -525,8 +515,7 @@ mod tests {
         config.timeout = Duration::from_millis(100);
         config.max_retries = 0;
 
-        let client =
-            ClaudeClient::with_base_url("test-key".into(), server.uri(), config);
+        let client = ClaudeClient::with_base_url("test-key".into(), server.uri(), config);
         let err = client.generate(&test_request()).await.unwrap_err();
         assert!(
             matches!(err, FearEngineError::Timeout { .. }),
@@ -546,8 +535,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let client =
-            ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
+        let client = ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
         let err = client.generate(&test_request()).await.unwrap_err();
         assert!(err.to_string().contains("malformed"));
     }
@@ -571,8 +559,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let client =
-            ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
+        let client = ClaudeClient::with_base_url("test-key".into(), server.uri(), test_config());
         let resp = client.generate(&test_request()).await.unwrap();
         assert_eq!(resp.usage.input_tokens, 150);
         assert_eq!(resp.usage.output_tokens, 75);
@@ -589,11 +576,8 @@ mod tests {
 
     #[test]
     fn test_retry_delay_exponential() {
-        let client = ClaudeClient::with_base_url(
-            "k".into(),
-            "http://localhost".into(),
-            test_config(),
-        );
+        let client =
+            ClaudeClient::with_base_url("k".into(), "http://localhost".into(), test_config());
         assert_eq!(client.retry_delay(1), Duration::from_millis(50));
         assert_eq!(client.retry_delay(2), Duration::from_millis(100));
         assert_eq!(client.retry_delay(3), Duration::from_millis(200)); // capped

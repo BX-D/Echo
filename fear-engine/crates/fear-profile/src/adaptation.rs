@@ -5,9 +5,7 @@
 //! returns an [`AdaptationDirective`] containing everything the AI prompt
 //! builder needs to generate the next scene.
 
-use fear_engine_common::types::{
-    AdaptationStrategy, EscalationCurve, FearType, GamePhase,
-};
+use fear_engine_common::types::{AdaptationStrategy, EscalationCurve, FearType, GamePhase};
 use serde::{Deserialize, Serialize};
 
 use crate::profile::FearProfile;
@@ -306,11 +304,7 @@ impl AdaptationEngine {
         }
     }
 
-    fn generate_instruction(
-        &self,
-        strategy: &AdaptationStrategy,
-        profile: &FearProfile,
-    ) -> String {
+    fn generate_instruction(&self, strategy: &AdaptationStrategy, profile: &FearProfile) -> String {
         let obs = profile.update_count();
         match strategy {
             AdaptationStrategy::Probe { target_fears, .. } => {
@@ -457,9 +451,7 @@ fn fear_description(fear: &FearType) -> &'static str {
         FearType::Claustrophobia => {
             "Describe spaces getting smaller, walls pressing in, doors that won't open."
         }
-        FearType::Isolation => {
-            "Emphasise emptiness, silence, distance from help or other people."
-        }
+        FearType::Isolation => "Emphasise emptiness, silence, distance from help or other people.",
         FearType::BodyHorror => {
             "Include wrongness in bodies — extra limbs, impossible anatomy, transformation."
         }

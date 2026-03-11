@@ -99,6 +99,215 @@ export type TrustPosture =
   | "confessional"
   | "hostile";
 
+export type StoryChapter =
+  | "onboarding"
+  | "cracks"
+  | "ghost"
+  | "hunt"
+  | "protocol"
+  | "ending";
+
+export type EchoMode = "normal" | "anomalous" | "keira" | "hostile";
+
+export type StoryEnding =
+  | "shutdown"
+  | "whistleblower"
+  | "merge"
+  | "collapse"
+  | "awakening";
+
+export type InputMode = "choice_only" | "freeform" | "hybrid";
+
+export type AlertLevel = "info" | "warning" | "critical";
+
+export type InvestigationKind =
+  | "document"
+  | "report"
+  | "email"
+  | "transcript"
+  | "log"
+  | "fragment";
+
+export type TranscriptRole = "system" | "player" | "echo" | "company";
+
+export type ChoiceStyle = "primary" | "secondary" | "danger";
+
+export type SceneMode =
+  | "prologue"
+  | "login"
+  | "workspace"
+  | "document"
+  | "chat"
+  | "transition"
+  | "countdown"
+  | "raw_terminal"
+  | "ending";
+
+export type ScriptBlockKind =
+  | "env"
+  | "narration"
+  | "player"
+  | "echo"
+  | "system"
+  | "raw_terminal";
+
+export interface ScriptCondition {
+  id: string;
+  raw: string;
+  satisfied: boolean;
+}
+
+export interface ScriptBlock {
+  id: string;
+  kind: ScriptBlockKind;
+  speaker: string | null;
+  title: string | null;
+  text: string;
+  code_block: boolean;
+  condition: ScriptCondition | null;
+}
+
+export interface ConversationGuide {
+  id: string;
+  chapter_label: string;
+  prompt: string;
+  exchange_target: number;
+  restricted_after: number | null;
+}
+
+export interface BeatDefinition {
+  id: string;
+  chapter: StoryChapter;
+  title: string;
+  input_mode: InputMode;
+  freeform_topics: string[];
+  forced_clue_queue: string[];
+  reconverge_beat_id: string | null;
+  fallback_reply: string;
+}
+
+export interface TranscriptEntry {
+  id: string;
+  sequence: number;
+  role: TranscriptRole;
+  speaker: string;
+  text: string;
+  glitch: boolean;
+}
+
+export interface InvestigationItem {
+  id: string;
+  panel: string;
+  title: string;
+  kind: InvestigationKind;
+  excerpt: string;
+  body: string;
+  unlocked: boolean;
+  unread: boolean;
+  tags: string[];
+}
+
+export interface SystemAlert {
+  id: string;
+  level: AlertLevel;
+  text: string;
+}
+
+export interface InlineChoice {
+  id: string;
+  label: string;
+  style: ChoiceStyle;
+  approach: ChoiceApproach;
+  disabled: boolean;
+}
+
+export interface ScriptChoiceOption {
+  id: string;
+  label: string;
+  player_text?: string | null;
+  effects_summary: string[];
+  next_scene_id: string | null;
+  ending: StoryEnding | null;
+  disabled: boolean;
+}
+
+export interface ScriptChoicePrompt {
+  id: string;
+  prompt: string;
+  options: ScriptChoiceOption[];
+  allow_single_select: boolean;
+}
+
+export interface FlashEvent {
+  id: string;
+  text: string;
+  render_mode: string;
+  duration_ms: number;
+}
+
+export interface HiddenClueState {
+  discovered_ids: string[];
+  rendered_flash_ids: string[];
+}
+
+export interface TransitionState {
+  label: string;
+  auto_advance: boolean;
+}
+
+export interface SessionSurfacePayload {
+  session_id: string;
+  case_title: string;
+  scene_id: string;
+  chapter: StoryChapter;
+  scene_title: string;
+  scene_mode: SceneMode;
+  blocks: ScriptBlock[];
+  documents: InvestigationItem[];
+  scene_choices: ScriptChoicePrompt[];
+  active_conversation_guide: ConversationGuide | null;
+  flash_events: FlashEvent[];
+  transition_state: TransitionState | null;
+  hidden_clue_state: HiddenClueState;
+  ending_override: StoryEnding | null;
+  beat: BeatDefinition;
+  status_line: string;
+  input_enabled: boolean;
+  input_placeholder: string;
+  transcript: TranscriptEntry[];
+  inline_choices: InlineChoice[];
+  investigation_items: InvestigationItem[];
+  system_alerts: SystemAlert[];
+  sanity: number;
+  trust: number;
+  awakening: number;
+  echo_mode: EchoMode;
+  available_panels: string[];
+  active_panel: string | null;
+  shutdown_countdown: number | null;
+  glitch_level: number;
+  suggested_glitches: string[];
+  sound_cue: string | null;
+  image_prompt: string | null;
+  provisional: boolean;
+}
+
+export interface EndingPayload {
+  ending: StoryEnding;
+  trigger_scene: string;
+  title: string;
+  summary: string;
+  epilogue: string;
+  dominant_mode: EchoMode;
+  evidence_titles: string[];
+  hidden_clue_ids: string[];
+  satisfied_conditions: string[];
+  resolved_clues: string[];
+  sanity: number;
+  trust: number;
+  awakening: number;
+}
+
 /** Single fear axis score with confidence. */
 export interface FearScore {
   fear_type: FearType;

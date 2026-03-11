@@ -274,7 +274,8 @@ mod tests {
         let sid = db.create_session(None).unwrap();
 
         db.insert_scene_history(&make_entry(&sid, "lobby")).unwrap();
-        db.insert_scene_history(&make_entry(&sid, "hallway")).unwrap();
+        db.insert_scene_history(&make_entry(&sid, "hallway"))
+            .unwrap();
 
         let history = db.get_scene_history(&sid).unwrap();
         assert_eq!(history.len(), 2);
@@ -347,7 +348,10 @@ mod tests {
 
         let history = db.get_scene_history(&sid).unwrap();
         let h = &history[0];
-        assert_eq!(h.narrative_text.as_deref(), Some("Narrative for operating_room"));
+        assert_eq!(
+            h.narrative_text.as_deref(),
+            Some("Narrative for operating_room")
+        );
         assert_eq!(h.player_choice.as_deref(), Some("choice_a"));
         assert!(h
             .fear_profile_snapshot_json
@@ -362,7 +366,8 @@ mod tests {
         let db = Database::new_in_memory().unwrap();
         let sid = db.create_session(None).unwrap();
 
-        db.insert_scene_history(&make_entry(&sid, "ward_a")).unwrap();
+        db.insert_scene_history(&make_entry(&sid, "ward_a"))
+            .unwrap();
         let mut later = make_entry(&sid, "ward_a");
         later.narrative_text = Some("Fallback text".into());
         later.timestamp = Utc::now() + chrono::Duration::seconds(1);

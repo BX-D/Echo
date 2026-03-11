@@ -56,7 +56,9 @@ impl AppConfig {
     /// assert!(!cfg.database_url.is_empty());
     /// ```
     pub fn from_env() -> Self {
-        let stability_key = std::env::var("OPENAI_API_KEY").ok().filter(|s| !s.is_empty());
+        let stability_key = std::env::var("OPENAI_API_KEY")
+            .ok()
+            .filter(|s| !s.is_empty());
 
         let server_port = std::env::var("SERVER_PORT")
             .ok()
@@ -68,13 +70,11 @@ impl AppConfig {
             stability_api_key: stability_key,
             database_url: std::env::var("DATABASE_URL")
                 .unwrap_or_else(|_| "sqlite://fear_engine.db".into()),
-            server_host: std::env::var("SERVER_HOST")
-                .unwrap_or_else(|_| "127.0.0.1".into()),
+            server_host: std::env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".into()),
             server_port,
             frontend_url: std::env::var("FRONTEND_URL")
                 .unwrap_or_else(|_| "http://localhost:5173".into()),
-            log_level: std::env::var("RUST_LOG")
-                .unwrap_or_else(|_| "fear_engine=debug".into()),
+            log_level: std::env::var("RUST_LOG").unwrap_or_else(|_| "fear_engine=debug".into()),
         }
     }
 

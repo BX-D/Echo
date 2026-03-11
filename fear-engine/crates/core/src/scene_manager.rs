@@ -7,9 +7,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use fear_engine_common::types::{
-    Atmosphere, EffectDirective, EffectType, FearType, GamePhase,
-};
+use fear_engine_common::types::{Atmosphere, EffectDirective, EffectType, FearType, GamePhase};
 use fear_engine_common::{FearEngineError, Result};
 use serde::{Deserialize, Serialize};
 

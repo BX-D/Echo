@@ -262,7 +262,15 @@ fn compute_engagement(events: &[BehaviorEvent]) -> f64 {
 
     let rereading_count = events
         .iter()
-        .filter(|e| matches!(&e.event_type, BehaviorEventType::Scroll { rereading: true, .. }))
+        .filter(|e| {
+            matches!(
+                &e.event_type,
+                BehaviorEventType::Scroll {
+                    rereading: true,
+                    ..
+                }
+            )
+        })
         .count();
 
     let choice_ratio = if total_choices > 0 {

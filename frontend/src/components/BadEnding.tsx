@@ -54,7 +54,7 @@ export default function BadEnding({ selfieUrl, onRestart }: BadEndingProps) {
       data-testid="bad-ending"
     >
       <p className="text-[11px] uppercase tracking-[0.38em] text-smoke/55 mb-5 font-body">
-        Session Mirror / Terminal State
+        Echo Protocol / Terminal State
       </p>
       <h1 className="text-5xl font-horror text-blood mb-4 animate-flicker text-center">
         THE SESSION HAS

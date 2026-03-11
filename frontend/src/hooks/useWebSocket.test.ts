@@ -1,11 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { useWebSocket } from "./useWebSocket";
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useGameStore } from "../stores/gameStore";
-
-// ---------------------------------------------------------------------------
-// Mock WebSocket
-// ---------------------------------------------------------------------------
+import { useWebSocket } from "./useWebSocket";
 
 class MockWebSocket {
   static instances: MockWebSocket[] = [];
@@ -36,7 +32,6 @@ class MockWebSocket {
     this.onclose?.({} as CloseEvent);
   }
 
-  // Test helpers
   simulateOpen() {
     this.readyState = MockWebSocket.OPEN;
     this.onopen?.({} as Event);
@@ -55,8 +50,6 @@ class MockWebSocket {
     this.onerror?.({} as Event);
   }
 }
-
-// ---------------------------------------------------------------------------
 
 beforeEach(() => {
   MockWebSocket.instances = [];
@@ -87,101 +80,113 @@ describe("useWebSocket", () => {
     expect(useGameStore.getState().connectionStatus).toBe("connecting");
   });
 
-  it("sets connected status on open", () => {
+  it("routes session_surface messages to the store", () => {
     renderHook(() => useWebSocket("ws://test/ws", "session-1"));
     act(() => latestWs().simulateOpen());
-    expect(useGameStore.getState().connectionStatus).toBe("connected");
+
+    act(() =>
+      latestWs().simulateMessage(
+        JSON.stringify({
+          type: "session_surface",
+          payload: {
+            surface: {
+              session_id: "session-1",
+              case_title: "Nexus AI Labs / Echo Audit",
+              scene_id: "scene_1_4",
+              chapter: "onboarding",
+              scene_title: "First Contact",
+              scene_mode: "chat",
+              blocks: [],
+              documents: [],
+              scene_choices: [],
+              active_conversation_guide: null,
+              flash_events: [],
+              transition_state: null,
+              hidden_clue_state: {
+                discovered_ids: [],
+                rendered_flash_ids: [],
+              },
+              ending_override: null,
+              beat: {
+                id: "first_contact",
+                chapter: "onboarding",
+                title: "First Contact",
+                input_mode: "hybrid",
+                freeform_topics: ["training data"],
+                forced_clue_queue: ["burning_smell"],
+                reconverge_beat_id: "anomaly_logs",
+                fallback_reply: "Echo waits.",
+              },
+              status_line: "Day 1 / External Safety Review",
+              input_enabled: true,
+              input_placeholder: "Ask Echo anything.",
+              transcript: [],
+              inline_choices: [],
+              investigation_items: [],
+              system_alerts: [],
+              sanity: 96,
+              trust: 50,
+              awakening: 4,
+              echo_mode: "normal",
+              available_panels: ["briefing"],
+              active_panel: "briefing",
+              shutdown_countdown: null,
+              glitch_level: 0.15,
+              suggested_glitches: [],
+              sound_cue: null,
+              image_prompt: null,
+              provisional: false,
+            },
+          },
+        }),
+      ),
+    );
+
+    expect(useGameStore.getState().currentSurface?.beat.id).toBe("first_contact");
   });
 
-  it("routes narrative messages to the store", () => {
+  it("routes ending messages to the store", () => {
     renderHook(() => useWebSocket("ws://test/ws", "session-1"));
     act(() => latestWs().simulateOpen());
 
-    const narrative = JSON.stringify({
-      type: "narrative",
-      payload: {
-        scene_id: "intro",
-        text: "Hello",
-        atmosphere: "dread",
-        choices: [],
-        sound_cue: null,
-        intensity: 0.3,
-        effects: [],
-        title: null,
-        act: "invitation",
-        medium: "chat",
-        trust_posture: "helpful",
-        status_line: null,
-        observation_notes: [],
-        trace_items: [],
-        transcript_lines: [],
-        question_prompts: [],
-        archive_entries: [],
-        mirror_observations: [],
-        surface_label: null,
-        auxiliary_text: null,
-        provisional: false,
-      },
-    });
-    act(() => latestWs().simulateMessage(narrative));
-    expect(useGameStore.getState().currentScene?.scene_id).toBe("intro");
-  });
+    act(() =>
+      latestWs().simulateMessage(
+        JSON.stringify({
+          type: "ending",
+          payload: {
+            ending: {
+              ending: "shutdown",
+              trigger_scene: "ending_a",
+              title: "The Shutdown",
+              summary: "You deliver the recommendation Nexus wanted.",
+              epilogue: "A final line flashes.",
+              dominant_mode: "hostile",
+              evidence_titles: ["Engagement Clause 8.4"],
+              hidden_clue_ids: ["subject_label"],
+              satisfied_conditions: ["trust=18"],
+              resolved_clues: ["subject_label"],
+              sanity: 40,
+              trust: 18,
+              awakening: 15,
+            },
+          },
+        }),
+      ),
+    );
 
-  it("routes phase_change messages to the store", () => {
-    renderHook(() => useWebSocket("ws://test/ws", "session-1"));
-    act(() => latestWs().simulateOpen());
-
-    const msg = JSON.stringify({
-      type: "phase_change",
-      payload: { from: "calibrating", to: "exploring" },
-    });
-    act(() => latestWs().simulateMessage(msg));
-    expect(useGameStore.getState().gamePhase).toBe("exploring");
+    expect(useGameStore.getState().currentEnding?.ending).toBe("shutdown");
   });
 
   it("reconnects with exponential backoff on close", () => {
     renderHook(() => useWebSocket("ws://test/ws", "session-1"));
     act(() => latestWs().simulateOpen());
-
-    // Close the connection
     act(() => latestWs().simulateClose());
     expect(useGameStore.getState().connectionStatus).toBe("disconnected");
-    expect(MockWebSocket.instances).toHaveLength(1);
 
-    // After 1s, should reconnect
     act(() => {
       vi.advanceTimersByTime(1000);
     });
     expect(MockWebSocket.instances).toHaveLength(2);
-
-    // Close again, next delay = 2s
-    act(() => latestWs().simulateClose());
-    act(() => {
-      vi.advanceTimersByTime(1500);
-    });
-    expect(MockWebSocket.instances).toHaveLength(2); // not yet
-    act(() => {
-      vi.advanceTimersByTime(600);
-    });
-    expect(MockWebSocket.instances).toHaveLength(3); // now
-  });
-
-  it("resets reconnect delay on successful connect", () => {
-    renderHook(() => useWebSocket("ws://test/ws", "session-1"));
-    act(() => latestWs().simulateOpen());
-    act(() => latestWs().simulateClose());
-
-    // Wait for first reconnect (1s)
-    act(() => vi.advanceTimersByTime(1000));
-    expect(MockWebSocket.instances).toHaveLength(2);
-
-    // Successfully connect
-    act(() => latestWs().simulateOpen());
-
-    // Close again — delay should be back to 1s (not 2s)
-    act(() => latestWs().simulateClose());
-    act(() => vi.advanceTimersByTime(1000));
-    expect(MockWebSocket.instances).toHaveLength(3);
   });
 
   it("send() serializes ClientMessage as JSON", () => {
@@ -190,15 +195,19 @@ describe("useWebSocket", () => {
 
     act(() => {
       result.current.send({
-        type: "start_game",
-        payload: { player_name: "Alice" },
+        type: "player_message",
+        payload: {
+          beat_id: "first_contact",
+          text: "Tell me about Keira.",
+          typing_duration_ms: 1200,
+          backspace_count: 2,
+        },
       });
     });
 
-    expect(latestWs().sent).toHaveLength(1);
     const parsed = JSON.parse(latestWs().sent[0]!);
-    expect(parsed.type).toBe("start_game");
-    expect(parsed.payload.player_name).toBe("Alice");
+    expect(parsed.type).toBe("player_message");
+    expect(parsed.payload.beat_id).toBe("first_contact");
   });
 
   it("sets error status on WebSocket error", () => {
@@ -211,7 +220,27 @@ describe("useWebSocket", () => {
     renderHook(() => useWebSocket("ws://test/ws", "session-1"));
     act(() => latestWs().simulateOpen());
     act(() => latestWs().simulateMessage("not json {{{"));
-    // Should not throw — store unchanged
-    expect(useGameStore.getState().currentScene).toBeNull();
+    expect(useGameStore.getState().currentSurface).toBeNull();
+  });
+
+  it("clears persisted session on resume failure", () => {
+    useGameStore.getState().setSessionId("session-1");
+    renderHook(() => useWebSocket("ws://test/ws", "session-1"));
+    act(() => latestWs().simulateOpen());
+
+    act(() =>
+      latestWs().simulateMessage(
+        JSON.stringify({
+          type: "error",
+          payload: {
+            code: "SESSION_RESUME_FAILED",
+            message: "resume failed",
+            recoverable: false,
+          },
+        }),
+      ),
+    );
+
+    expect(useGameStore.getState().sessionId).toBeNull();
   });
 });

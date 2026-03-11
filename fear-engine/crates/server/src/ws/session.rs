@@ -1,6 +1,6 @@
 //! Per-connection game session state held in memory while a WebSocket is active.
 
-use fear_engine_common::types::{GamePhase, ServerMessage};
+use fear_engine_common::types::{ServerMessage, StoryChapter};
 use tokio::sync::mpsc;
 use tokio::time::Instant;
 
@@ -11,8 +11,8 @@ use tokio::time::Instant;
 pub struct GameSession {
     /// Database session ID (UUID).
     pub session_id: String,
-    /// Current game phase for fast access without a DB round-trip.
-    pub game_phase: GamePhase,
+    /// Current story chapter for fast access without a DB round-trip.
+    pub chapter: StoryChapter,
     /// Channel for pushing [`ServerMessage`]s to this connection's send task.
     pub sender: mpsc::Sender<ServerMessage>,
     /// When this connection was established.
@@ -28,11 +28,11 @@ mod tests {
         let (tx, _rx) = mpsc::channel(8);
         let session = GameSession {
             session_id: "test-id".into(),
-            game_phase: GamePhase::Calibrating,
+            chapter: StoryChapter::Onboarding,
             sender: tx,
             created_at: Instant::now(),
         };
         assert_eq!(session.session_id, "test-id");
-        assert_eq!(session.game_phase, GamePhase::Calibrating);
+        assert_eq!(session.chapter, StoryChapter::Onboarding);
     }
 }

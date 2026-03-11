@@ -7,11 +7,13 @@ import type {
   Choice,
   DisplayMode,
   EndingClassification,
+  EndingPayload as EchoEndingPayload,
   EffectDirective,
   FearProfileSummary,
   KeyMoment,
   MetaTarget,
   RevealAnalysis,
+  SessionSurfacePayload,
   SessionAct,
   SessionSummary,
   SurfaceMedium,
@@ -49,6 +51,8 @@ export interface NarrativePayload {
   provisional: boolean;
 }
 
+export interface SessionSurfaceMessagePayload extends SessionSurfacePayload {}
+
 export interface ImagePayload {
   scene_id: string;
   image_url: string;
@@ -76,6 +80,8 @@ export interface RevealPayload {
   analysis: RevealAnalysis;
 }
 
+export interface EndingPayload extends EchoEndingPayload {}
+
 export interface ErrorPayload {
   code: string;
   message: string;
@@ -83,6 +89,8 @@ export interface ErrorPayload {
 }
 
 export type ServerMessage =
+  | { type: "session_surface"; payload: { surface: SessionSurfaceMessagePayload } }
+  | { type: "ending"; payload: { ending: EndingPayload } }
   | { type: "narrative"; payload: NarrativePayload }
   | { type: "image"; payload: ImagePayload }
   | { type: "phase_change"; payload: PhaseChangePayload }
@@ -96,6 +104,15 @@ export type ServerMessage =
 
 export type ClientMessage =
   | { type: "start_game"; payload: { player_name?: string | null } }
+  | {
+      type: "player_message";
+      payload: {
+        beat_id: string;
+        text: string;
+        typing_duration_ms: number;
+        backspace_count: number;
+      };
+    }
   | {
       type: "choice";
       payload: {

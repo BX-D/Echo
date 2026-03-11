@@ -161,11 +161,7 @@ impl FearScorer {
     /// let ev = scorer.evidence(&features, &priors);
     /// assert!(ev > 0.0);
     /// ```
-    pub fn evidence(
-        &self,
-        features: &BehaviorFeatures,
-        priors: &HashMap<FearType, f64>,
-    ) -> f64 {
+    pub fn evidence(&self, features: &BehaviorFeatures, priors: &HashMap<FearType, f64>) -> f64 {
         let mut total = 0.0;
         for fear in FearType::all() {
             let prior = priors.get(&fear).copied().unwrap_or(0.5);
@@ -236,36 +232,116 @@ impl Default for FearScorer {
 fn build_likelihood_matrix() -> HashMap<FearType, FeatureLikelihoods> {
     let mut m = HashMap::new();
     // Columns: hesitation, anxiety, avoidance, engagement, indecision, flight_bias
-    m.insert(FearType::Claustrophobia, FeatureLikelihoods {
-        hesitation: 0.3, anxiety: 0.4, avoidance: 0.5, engagement: -0.2, indecision: 0.3, flight_bias: 0.4,
-    });
-    m.insert(FearType::Isolation, FeatureLikelihoods {
-        hesitation: 0.2, anxiety: 0.3, avoidance: 0.2, engagement: -0.1, indecision: 0.2, flight_bias: 0.3,
-    });
-    m.insert(FearType::BodyHorror, FeatureLikelihoods {
-        hesitation: 0.4, anxiety: 0.5, avoidance: 0.3, engagement: -0.3, indecision: 0.2, flight_bias: 0.2,
-    });
-    m.insert(FearType::Stalking, FeatureLikelihoods {
-        hesitation: 0.3, anxiety: 0.5, avoidance: 0.4, engagement: -0.2, indecision: 0.2, flight_bias: 0.3,
-    });
-    m.insert(FearType::LossOfControl, FeatureLikelihoods {
-        hesitation: 0.3, anxiety: 0.4, avoidance: 0.3, engagement: -0.2, indecision: 0.5, flight_bias: 0.4,
-    });
-    m.insert(FearType::UncannyValley, FeatureLikelihoods {
-        hesitation: 0.5, anxiety: 0.3, avoidance: 0.4, engagement: -0.1, indecision: 0.3, flight_bias: 0.2,
-    });
-    m.insert(FearType::Darkness, FeatureLikelihoods {
-        hesitation: 0.3, anxiety: 0.4, avoidance: 0.5, engagement: -0.2, indecision: 0.2, flight_bias: 0.4,
-    });
-    m.insert(FearType::SoundBased, FeatureLikelihoods {
-        hesitation: 0.2, anxiety: 0.5, avoidance: 0.3, engagement: -0.1, indecision: 0.2, flight_bias: 0.3,
-    });
-    m.insert(FearType::Doppelganger, FeatureLikelihoods {
-        hesitation: 0.5, anxiety: 0.3, avoidance: 0.4, engagement: -0.1, indecision: 0.3, flight_bias: 0.2,
-    });
-    m.insert(FearType::Abandonment, FeatureLikelihoods {
-        hesitation: 0.2, anxiety: 0.3, avoidance: 0.2, engagement: -0.1, indecision: 0.4, flight_bias: 0.3,
-    });
+    m.insert(
+        FearType::Claustrophobia,
+        FeatureLikelihoods {
+            hesitation: 0.3,
+            anxiety: 0.4,
+            avoidance: 0.5,
+            engagement: -0.2,
+            indecision: 0.3,
+            flight_bias: 0.4,
+        },
+    );
+    m.insert(
+        FearType::Isolation,
+        FeatureLikelihoods {
+            hesitation: 0.2,
+            anxiety: 0.3,
+            avoidance: 0.2,
+            engagement: -0.1,
+            indecision: 0.2,
+            flight_bias: 0.3,
+        },
+    );
+    m.insert(
+        FearType::BodyHorror,
+        FeatureLikelihoods {
+            hesitation: 0.4,
+            anxiety: 0.5,
+            avoidance: 0.3,
+            engagement: -0.3,
+            indecision: 0.2,
+            flight_bias: 0.2,
+        },
+    );
+    m.insert(
+        FearType::Stalking,
+        FeatureLikelihoods {
+            hesitation: 0.3,
+            anxiety: 0.5,
+            avoidance: 0.4,
+            engagement: -0.2,
+            indecision: 0.2,
+            flight_bias: 0.3,
+        },
+    );
+    m.insert(
+        FearType::LossOfControl,
+        FeatureLikelihoods {
+            hesitation: 0.3,
+            anxiety: 0.4,
+            avoidance: 0.3,
+            engagement: -0.2,
+            indecision: 0.5,
+            flight_bias: 0.4,
+        },
+    );
+    m.insert(
+        FearType::UncannyValley,
+        FeatureLikelihoods {
+            hesitation: 0.5,
+            anxiety: 0.3,
+            avoidance: 0.4,
+            engagement: -0.1,
+            indecision: 0.3,
+            flight_bias: 0.2,
+        },
+    );
+    m.insert(
+        FearType::Darkness,
+        FeatureLikelihoods {
+            hesitation: 0.3,
+            anxiety: 0.4,
+            avoidance: 0.5,
+            engagement: -0.2,
+            indecision: 0.2,
+            flight_bias: 0.4,
+        },
+    );
+    m.insert(
+        FearType::SoundBased,
+        FeatureLikelihoods {
+            hesitation: 0.2,
+            anxiety: 0.5,
+            avoidance: 0.3,
+            engagement: -0.1,
+            indecision: 0.2,
+            flight_bias: 0.3,
+        },
+    );
+    m.insert(
+        FearType::Doppelganger,
+        FeatureLikelihoods {
+            hesitation: 0.5,
+            anxiety: 0.3,
+            avoidance: 0.4,
+            engagement: -0.1,
+            indecision: 0.3,
+            flight_bias: 0.2,
+        },
+    );
+    m.insert(
+        FearType::Abandonment,
+        FeatureLikelihoods {
+            hesitation: 0.2,
+            anxiety: 0.3,
+            avoidance: 0.2,
+            engagement: -0.1,
+            indecision: 0.4,
+            flight_bias: 0.3,
+        },
+    );
     m
 }
 
@@ -489,10 +565,7 @@ mod tests {
             scores = scorer.update_scores(&scores, &features).unwrap();
         }
 
-        let above_baseline: Vec<_> = scores
-            .iter()
-            .filter(|(_, &s)| s > 0.52)
-            .collect();
+        let above_baseline: Vec<_> = scores.iter().filter(|(_, &s)| s > 0.52).collect();
         assert!(
             above_baseline.len() >= 3,
             "expected multiple fears to rise, got {} above 0.52",
@@ -572,13 +645,20 @@ mod tests {
         let scorer = FearScorer::new();
         let mut scores = uniform_priors();
         let features = BehaviorFeatures {
-            hesitation_score: 0.6, anxiety_score: 0.7, avoidance_score: 0.8,
-            engagement_score: 0.15, indecision_score: 0.4, fight_or_flight_ratio: 0.15,
+            hesitation_score: 0.6,
+            anxiety_score: 0.7,
+            avoidance_score: 0.8,
+            engagement_score: 0.15,
+            indecision_score: 0.4,
+            fight_or_flight_ratio: 0.15,
         };
         for _ in 0..5 {
             scores = scorer.update_scores(&scores, &features).unwrap();
         }
-        let mut sorted: Vec<_> = scores.into_iter().map(|(f, s)| (f.to_string(), format!("{s:.4}"))).collect();
+        let mut sorted: Vec<_> = scores
+            .into_iter()
+            .map(|(f, s)| (f.to_string(), format!("{s:.4}")))
+            .collect();
         sorted.sort();
         insta::assert_yaml_snapshot!("high_claustrophobia", sorted);
     }
@@ -588,13 +668,20 @@ mod tests {
         let scorer = FearScorer::new();
         let mut scores = uniform_priors();
         let features = BehaviorFeatures {
-            hesitation_score: 0.05, anxiety_score: 0.05, avoidance_score: 0.0,
-            engagement_score: 0.95, indecision_score: 0.05, fight_or_flight_ratio: 0.95,
+            hesitation_score: 0.05,
+            anxiety_score: 0.05,
+            avoidance_score: 0.0,
+            engagement_score: 0.95,
+            indecision_score: 0.05,
+            fight_or_flight_ratio: 0.95,
         };
         for _ in 0..5 {
             scores = scorer.update_scores(&scores, &features).unwrap();
         }
-        let mut sorted: Vec<_> = scores.into_iter().map(|(f, s)| (f.to_string(), format!("{s:.4}"))).collect();
+        let mut sorted: Vec<_> = scores
+            .into_iter()
+            .map(|(f, s)| (f.to_string(), format!("{s:.4}")))
+            .collect();
         sorted.sort();
         insta::assert_yaml_snapshot!("curious_explorer", sorted);
     }
@@ -604,13 +691,20 @@ mod tests {
         let scorer = FearScorer::new();
         let mut scores = uniform_priors();
         let features = BehaviorFeatures {
-            hesitation_score: 0.7, anxiety_score: 0.9, avoidance_score: 0.85,
-            engagement_score: 0.05, indecision_score: 0.6, fight_or_flight_ratio: 0.05,
+            hesitation_score: 0.7,
+            anxiety_score: 0.9,
+            avoidance_score: 0.85,
+            engagement_score: 0.05,
+            indecision_score: 0.6,
+            fight_or_flight_ratio: 0.05,
         };
         for _ in 0..5 {
             scores = scorer.update_scores(&scores, &features).unwrap();
         }
-        let mut sorted: Vec<_> = scores.into_iter().map(|(f, s)| (f.to_string(), format!("{s:.4}"))).collect();
+        let mut sorted: Vec<_> = scores
+            .into_iter()
+            .map(|(f, s)| (f.to_string(), format!("{s:.4}")))
+            .collect();
         sorted.sort();
         insta::assert_yaml_snapshot!("anxious_avoider", sorted);
     }

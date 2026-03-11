@@ -27,7 +27,10 @@ const MIGRATION_001: &str = include_str!("migrations/001_initial.sql");
 struct ConnectionCustomizer;
 
 impl r2d2::CustomizeConnection<rusqlite::Connection, rusqlite::Error> for ConnectionCustomizer {
-    fn on_acquire(&self, conn: &mut rusqlite::Connection) -> std::result::Result<(), rusqlite::Error> {
+    fn on_acquire(
+        &self,
+        conn: &mut rusqlite::Connection,
+    ) -> std::result::Result<(), rusqlite::Error> {
         conn.execute_batch("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;")?;
         Ok(())
     }
@@ -60,7 +63,9 @@ impl Database {
     /// let db = Database::new("sqlite://fear_engine.db").unwrap();
     /// ```
     pub fn new(database_url: &str) -> Result<Self> {
-        let path = database_url.strip_prefix("sqlite://").unwrap_or(database_url);
+        let path = database_url
+            .strip_prefix("sqlite://")
+            .unwrap_or(database_url);
         let manager = SqliteConnectionManager::file(path);
         let pool = r2d2::Pool::builder()
             .connection_customizer(Box::new(ConnectionCustomizer))
@@ -134,8 +139,7 @@ pub(crate) fn parse_timestamp(s: &str) -> Result<chrono::DateTime<chrono::Utc>> 
     chrono::DateTime::parse_from_rfc3339(s)
         .map(|dt| dt.with_timezone(&chrono::Utc))
         .or_else(|_| {
-            chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")
-                .map(|ndt| ndt.and_utc())
+            chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map(|ndt| ndt.and_utc())
         })
         .map_err(|e| FearEngineError::Serialization(format!("invalid timestamp '{s}': {e}")))
 }

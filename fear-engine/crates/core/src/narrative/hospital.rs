@@ -2,8 +2,8 @@
 
 use fear_engine_common::types::*;
 
-use crate::scene::*;
 use super::templates::template_scenes;
+use crate::scene::*;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Calibration scenes  (3)
@@ -464,7 +464,9 @@ pub fn build_hospital_graph() -> SceneGraph {
     let mut graph = SceneGraph::new("cal_awakening".into());
 
     for scene in calibration_scenes() {
-        graph.add_scene(scene).expect("duplicate calibration scene id");
+        graph
+            .add_scene(scene)
+            .expect("duplicate calibration scene id");
     }
     for scene in probe_scenes() {
         graph.add_scene(scene).expect("duplicate probe scene id");
@@ -486,7 +488,10 @@ mod tests {
         let graph = build_hospital_graph();
         let cal_ids = ["cal_awakening", "cal_corridor", "cal_reception"];
         for id in &cal_ids {
-            assert!(graph.get_scene(id).is_ok(), "missing calibration scene: {id}");
+            assert!(
+                graph.get_scene(id).is_ok(),
+                "missing calibration scene: {id}"
+            );
         }
     }
 

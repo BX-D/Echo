@@ -210,8 +210,7 @@ fn validate_event_type(et: &BehaviorEventType, index: usize) -> Result<()> {
             }
         }
         BehaviorEventType::FocusChange {
-            return_latency_ms,
-            ..
+            return_latency_ms, ..
         } => {
             if let Some(latency) = return_latency_ms {
                 if *latency > 3_600_000 {

@@ -19,9 +19,8 @@ export default function DebugOverlay({
   onSpeedChange,
   onReset,
 }: DebugOverlayProps) {
-  const gamePhase = useGameStore((s) => s.gamePhase);
-  const currentScene = useGameStore((s) => s.currentScene);
-  const sceneHistory = useGameStore((s) => s.sceneHistory);
+  const currentSurface = useGameStore((s) => s.currentSurface);
+  const currentEnding = useGameStore((s) => s.currentEnding);
 
   if (!visible) return null;
 
@@ -43,10 +42,11 @@ export default function DebugOverlay({
       </div>
 
       <div className="space-y-1 mb-2">
-        <div>Phase: <span className="text-bone">{gamePhase ?? "none"}</span></div>
-        <div>Scene: <span className="text-bone">{currentScene?.scene_id ?? "—"}</span></div>
-        <div>History: <span className="text-bone">{sceneHistory.length}</span></div>
-        <div>Intensity: <span className="text-bone">{currentScene?.intensity?.toFixed(2) ?? "—"}</span></div>
+        <div>Chapter: <span className="text-bone">{currentSurface?.beat.chapter ?? "none"}</span></div>
+        <div>Beat: <span className="text-bone">{currentSurface?.beat.id ?? "—"}</span></div>
+        <div>Transcript: <span className="text-bone">{currentSurface?.transcript.length ?? 0}</span></div>
+        <div>Glitch: <span className="text-bone">{currentSurface?.glitch_level?.toFixed(2) ?? "—"}</span></div>
+        <div>Ending: <span className="text-bone">{currentEnding?.ending ?? "—"}</span></div>
       </div>
 
       <div className="flex gap-1 mt-2" data-testid="speed-controls">

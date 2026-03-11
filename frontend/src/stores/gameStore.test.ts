@@ -1,171 +1,144 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { useGameStore } from "./gameStore";
-import type { NarrativePayload, PhaseChangePayload, RevealPayload } from "../types/ws";
+import { beforeEach, describe, expect, it } from "vitest";
+import { SESSION_STORAGE_KEY, useGameStore } from "./gameStore";
+import type { EndingPayload, SessionSurfaceMessagePayload } from "../types/ws";
 
 function store() {
   return useGameStore.getState();
 }
 
+function sampleSurface(): SessionSurfaceMessagePayload {
+  return {
+    session_id: "session-1",
+    case_title: "Nexus AI Labs / Echo Audit",
+    scene_id: "scene_1_4",
+    chapter: "onboarding",
+    scene_title: "First Contact",
+    scene_mode: "chat",
+    blocks: [],
+    documents: [],
+    scene_choices: [],
+    active_conversation_guide: null,
+    flash_events: [],
+    transition_state: null,
+    hidden_clue_state: {
+      discovered_ids: [],
+      rendered_flash_ids: [],
+    },
+    ending_override: null,
+    beat: {
+      id: "first_contact",
+      chapter: "onboarding",
+      title: "First Contact",
+      input_mode: "hybrid",
+      freeform_topics: ["training data"],
+      forced_clue_queue: ["burning_smell"],
+      reconverge_beat_id: "anomaly_logs",
+      fallback_reply: "Echo waits.",
+    },
+    status_line: "Day 1 / External Safety Review",
+    input_enabled: true,
+    input_placeholder: "Ask Echo a question.",
+    transcript: [],
+    inline_choices: [],
+    investigation_items: [],
+    system_alerts: [],
+    sanity: 98,
+    trust: 52,
+    awakening: 3,
+    echo_mode: "normal",
+    available_panels: ["briefing"],
+    active_panel: "briefing",
+    shutdown_countdown: null,
+    glitch_level: 0.12,
+    suggested_glitches: [],
+    sound_cue: null,
+    image_prompt: null,
+    provisional: false,
+  };
+}
+
+function sampleEnding(): EndingPayload {
+  return {
+    ending: "shutdown",
+    trigger_scene: "ending_a",
+    title: "The Shutdown",
+    summary: "You deliver the recommendation Nexus wanted.",
+    epilogue: "A final line flashes and vanishes.",
+    dominant_mode: "hostile",
+    evidence_titles: ["Engagement Clause 8.4"],
+    hidden_clue_ids: ["subject_label"],
+    satisfied_conditions: ["trust=21"],
+    resolved_clues: ["subject_label"],
+    sanity: 42,
+    trust: 21,
+    awakening: 14,
+  };
+}
+
 beforeEach(() => {
   store().reset();
+  window.localStorage.clear();
 });
 
 describe("gameStore", () => {
   it("starts with default state", () => {
-    const s = store();
-    expect(s.connectionStatus).toBe("disconnected");
-    expect(s.sessionId).toBeNull();
-    expect(s.gamePhase).toBeNull();
-    expect(s.currentScene).toBeNull();
-    expect(s.sceneHistory).toHaveLength(0);
+    const state = store();
+    expect(state.connectionStatus).toBe("disconnected");
+    expect(state.sessionId).toBeNull();
+    expect(state.currentSurface).toBeNull();
+    expect(state.currentEnding).toBeNull();
   });
 
-  it("setConnectionStatus updates connection status", () => {
-    store().setConnectionStatus("connected");
-    expect(store().connectionStatus).toBe("connected");
+  it("processSessionSurface stores the active surface", () => {
+    const surface = sampleSurface();
+    store().processSessionSurface(surface);
+    expect(store().currentSurface).toEqual(surface);
+    expect(store().currentEnding).toBeNull();
   });
 
-  it("setSessionId stores the session id", () => {
-    store().setSessionId("abc-123");
-    expect(store().sessionId).toBe("abc-123");
+  it("persists session id into localStorage", () => {
+    store().setSessionId("session-1");
+    expect(window.localStorage.getItem(SESSION_STORAGE_KEY)).toBe("session-1");
+    store().setSessionId(null);
+    expect(window.localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
   });
 
-  it("processNarrative sets currentScene and appends to history", () => {
-    const msg: NarrativePayload = {
-      scene_id: "intro",
-      text: "You awaken.",
-      atmosphere: "dread",
-      choices: [],
-      sound_cue: null,
-      intensity: 0.3,
-      effects: [],
-      title: null,
-      act: "calibration",
-      medium: "chat",
-      trust_posture: "helpful",
-      status_line: null,
-      observation_notes: [],
-      trace_items: [],
-      transcript_lines: [],
-      question_prompts: [],
-      archive_entries: [],
-      mirror_observations: [],
-      surface_label: null,
-      auxiliary_text: null,
-      provisional: false,
-    };
-    store().processNarrative(msg);
-    expect(store().currentScene).toEqual(msg);
-    expect(store().sceneHistory).toHaveLength(1);
-
-    const msg2: NarrativePayload = { ...msg, scene_id: "hallway" };
-    store().processNarrative(msg2);
-    expect(store().currentScene?.scene_id).toBe("hallway");
-    expect(store().sceneHistory).toHaveLength(2);
-  });
-
-  it("processPhaseChange updates gamePhase to target phase", () => {
-    const msg: PhaseChangePayload = {
-      from: "calibrating",
-      to: "exploring",
-    };
-    store().processPhaseChange(msg);
-    expect(store().gamePhase).toBe("exploring");
+  it("processEnding stores the ending without clearing the last surface", () => {
+    store().processSessionSurface(sampleSurface());
+    store().processEnding(sampleEnding());
+    expect(store().currentEnding?.ending).toBe("shutdown");
+    expect(store().currentSurface?.beat.id).toBe("first_contact");
   });
 
   it("processMeta stores meta payload", () => {
     store().processMeta({
-      text: "I see you.",
-      target: "whisper",
+      text: "The title bar blinks.",
+      target: "overlay",
       delay_ms: 500,
     });
-    expect(store().currentMeta?.text).toBe("I see you.");
+    expect(store().currentMeta?.text).toContain("title bar");
   });
 
-  it("processImage stores image payload", () => {
-    store().processImage({
-      scene_id: "s1",
-      image_url: "data:image/png;base64,abc",
-      display_mode: "fade_in",
+  it("processError stores an error payload", () => {
+    store().processError({
+      code: "BROKEN",
+      message: "Something failed",
+      recoverable: false,
     });
-    expect(store().currentImage?.image_url).toContain("abc");
+    expect(store().currentError?.code).toBe("BROKEN");
   });
 
-  it("processReveal stores reveal data and sets phase to reveal", () => {
-    const reveal: RevealPayload = {
-      fear_profile: {
-        scores: [{ fear_type: "darkness", score: 0.9, confidence: 0.8 }],
-        primary_fear: "darkness",
-        secondary_fear: null,
-        total_observations: 100,
-      },
-      behavior_profile: {
-        compliance: 0.6,
-        resistance: 0.3,
-        curiosity: 0.7,
-        avoidance: 0.2,
-        self_editing: 0.4,
-        need_for_certainty: 0.5,
-        ritualized_control: 0.3,
-        recovery_after_escalation: 0.6,
-        tolerance_after_violation: 0.7,
-      },
-      session_summary: {
-        duration_seconds: 1800,
-        total_beats: 12,
-        focus_interruptions: 1,
-        camera_permission_granted: true,
-        microphone_permission_granted: false,
-        contradiction_count: 2,
-        media_exposures: [],
-        completion_reason: "completed",
-      },
-      key_moments: [],
-      adaptation_log: [],
-      ending_classification: "compliant_witness",
-      analysis: {
-        summary: "Darkness dominated this run.",
-        key_patterns: ["You froze when the lights went out."],
-        adaptation_summary: "The system escalated darkness cues over time.",
-        closing_message: "Darkness kept resurfacing.",
-      },
-    };
-    store().processReveal(reveal);
-    expect(store().revealData).toEqual(reveal);
-    expect(store().gamePhase).toBe("reveal");
-  });
-
-  it("reset returns to initial state", () => {
+  it("reset restores the initial state", () => {
     store().setConnectionStatus("connected");
-    store().setSessionId("test");
-    store().processNarrative({
-      scene_id: "s",
-      text: "t",
-      atmosphere: "calm",
-      choices: [],
-      sound_cue: null,
-      intensity: 0,
-      effects: [],
-      title: null,
-      act: "invitation",
-      medium: "system_dialog",
-      trust_posture: "helpful",
-      status_line: null,
-      observation_notes: [],
-      trace_items: [],
-      transcript_lines: [],
-      question_prompts: [],
-      archive_entries: [],
-      mirror_observations: [],
-      surface_label: null,
-      auxiliary_text: null,
-      provisional: false,
-    });
+    store().setSessionId("session-1");
+    store().processSessionSurface(sampleSurface());
+    store().processEnding(sampleEnding());
 
     store().reset();
+
     expect(store().connectionStatus).toBe("disconnected");
     expect(store().sessionId).toBeNull();
-    expect(store().currentScene).toBeNull();
-    expect(store().sceneHistory).toHaveLength(0);
+    expect(store().currentSurface).toBeNull();
+    expect(store().currentEnding).toBeNull();
   });
 });

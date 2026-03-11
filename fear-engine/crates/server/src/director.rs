@@ -1,9 +1,9 @@
 use fear_engine_common::types::{
     Atmosphere, BehaviorEvent, BehaviorEventType, BehaviorProfileSummary, EndingClassification,
-    MediumExposure, SessionAct, SessionSummary, ServerMessage, SurfaceMedium, TrustPosture,
+    MediumExposure, ServerMessage, SessionAct, SessionSummary, SurfaceMedium, TrustPosture,
 };
-use fear_engine_storage::session::Session;
 use fear_engine_storage::scene_history::SceneHistoryEntry;
+use fear_engine_storage::session::Session;
 use std::collections::HashSet;
 
 /// Formats narrative beats and derives session-level authored judgments.
@@ -114,10 +114,12 @@ impl SessionDirector {
             .max(0) as u64;
         let focus_interruptions = behavior_events
             .iter()
-            .filter(|event| matches!(
-                event.event_type,
-                BehaviorEventType::FocusChange { focused: false, .. }
-            ))
+            .filter(|event| {
+                matches!(
+                    event.event_type,
+                    BehaviorEventType::FocusChange { focused: false, .. }
+                )
+            })
             .count() as u32;
 
         SessionSummary {
@@ -139,10 +141,7 @@ impl SessionDirector {
         }
     }
 
-    pub fn classify_ending(
-        &self,
-        behavior: &BehaviorProfileSummary,
-    ) -> EndingClassification {
+    pub fn classify_ending(&self, behavior: &BehaviorProfileSummary) -> EndingClassification {
         if behavior.resistance >= 0.7 {
             EndingClassification::ResistantSubject
         } else if behavior.curiosity >= 0.7 && behavior.avoidance <= 0.35 {
@@ -176,20 +175,30 @@ impl SessionDirector {
 
         if total_scenes <= 4 {
             if behavior.avoidance >= 0.55 {
-                return remaining_probe(&["probe_abandonment", "probe_darkness", "probe_isolation"]);
+                return remaining_probe(&[
+                    "probe_abandonment",
+                    "probe_darkness",
+                    "probe_isolation",
+                ]);
             }
             if camera_permission_granted == Some(true)
                 && (behavior.curiosity >= 0.6 || camera_presence_signal >= 0.45)
             {
-                return remaining_probe(&["probe_doppelganger", "probe_uncanny", "probe_body_horror"]);
+                return remaining_probe(&[
+                    "probe_doppelganger",
+                    "probe_uncanny",
+                    "probe_body_horror",
+                ]);
             }
-            if microphone_permission_granted == Some(true)
-                && microphone_commitment_signal >= 0.25
-            {
+            if microphone_permission_granted == Some(true) && microphone_commitment_signal >= 0.25 {
                 return remaining_probe(&["probe_sound", "probe_darkness", "probe_stalking"]);
             }
             if behavior.need_for_certainty >= 0.55 || behavior.ritualized_control >= 0.55 {
-                return remaining_probe(&["probe_loss_of_control", "probe_claustrophobia", "probe_body_horror"]);
+                return remaining_probe(&[
+                    "probe_loss_of_control",
+                    "probe_claustrophobia",
+                    "probe_body_horror",
+                ]);
             }
         }
 
@@ -350,7 +359,9 @@ impl SessionDirector {
             SessionAct::Calibration => TrustPosture::Curious,
             SessionAct::Accommodation => TrustPosture::Helpful,
             SessionAct::Contamination => {
-                if intensity >= 0.65 || matches!(atmosphere, Atmosphere::Paranoia | Atmosphere::Wrongness) {
+                if intensity >= 0.65
+                    || matches!(atmosphere, Atmosphere::Paranoia | Atmosphere::Wrongness)
+                {
                     TrustPosture::Manipulative
                 } else {
                     TrustPosture::Clinical
@@ -395,12 +406,7 @@ impl SessionDirector {
         )
     }
 
-    fn status_line_for(
-        &self,
-        act: SessionAct,
-        posture: TrustPosture,
-        total_scenes: u32,
-    ) -> String {
+    fn status_line_for(&self, act: SessionAct, posture: TrustPosture, total_scenes: u32) -> String {
         format!(
             "{} / {:?} / beat {:02}",
             self.display_act(act),
@@ -435,7 +441,8 @@ impl SessionDirector {
 
         if provisional {
             notes.push(
-                "The intelligence is still revising how directly it wants to present itself.".into(),
+                "The intelligence is still revising how directly it wants to present itself."
+                    .into(),
             );
         } else if intensity >= 0.75 {
             notes.push(
@@ -447,7 +454,8 @@ impl SessionDirector {
             );
         } else {
             notes.push(
-                "The system is still polite enough that its attention could be mistaken for care.".into(),
+                "The system is still polite enough that its attention could be mistaken for care."
+                    .into(),
             );
         }
 
@@ -503,10 +511,7 @@ impl SessionDirector {
             return Vec::new();
         }
 
-        self.narrative_blocks(text)
-            .into_iter()
-            .take(3)
-            .collect()
+        self.narrative_blocks(text).into_iter().take(3).collect()
     }
 
     fn archive_entries_for(&self, medium: SurfaceMedium, text: &str) -> Vec<String> {
@@ -514,10 +519,7 @@ impl SessionDirector {
             return Vec::new();
         }
 
-        self.narrative_blocks(text)
-            .into_iter()
-            .take(4)
-            .collect()
+        self.narrative_blocks(text).into_iter().take(4).collect()
     }
 
     fn mirror_observations_for(
@@ -549,7 +551,8 @@ impl SessionDirector {
                 TrustPosture::Helpful => "the system still performs patience",
                 TrustPosture::Curious => "it is examining how long you tolerate being framed",
                 TrustPosture::Clinical => "it sounds objective while becoming more intimate",
-                TrustPosture::Manipulative => "it is steering your attention while pretending not to",
+                TrustPosture::Manipulative =>
+                    "it is steering your attention while pretending not to",
                 TrustPosture::Confessional => "it wants to sound honest after hiding the method",
                 TrustPosture::Hostile => "it no longer needs to sound harmless",
             }
@@ -717,14 +720,21 @@ impl SessionDirector {
             links.push("presence_link".into());
         }
 
-        if matches!(medium, SurfaceMedium::Microphone | SurfaceMedium::Transcript)
-            || scene_id.starts_with("beat_silence")
+        if matches!(
+            medium,
+            SurfaceMedium::Microphone | SurfaceMedium::Transcript
+        ) || scene_id.starts_with("beat_silence")
             || scene_id.starts_with("probe_sound")
         {
             links.push("silence_link".into());
         }
 
-        if links.is_empty() && matches!(medium, SurfaceMedium::Archive | SurfaceMedium::Questionnaire) {
+        if links.is_empty()
+            && matches!(
+                medium,
+                SurfaceMedium::Archive | SurfaceMedium::Questionnaire
+            )
+        {
             links.push("pattern_trace".into());
         }
 

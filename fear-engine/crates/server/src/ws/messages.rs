@@ -109,7 +109,10 @@ mod tests {
                 ..
             } => {
                 assert_eq!(time_to_decide_ms, 1500);
-                assert_eq!(approach, fear_engine_common::types::ChoiceApproach::Investigate);
+                assert_eq!(
+                    approach,
+                    fear_engine_common::types::ChoiceApproach::Investigate
+                );
             }
             _ => panic!("wrong variant"),
         }

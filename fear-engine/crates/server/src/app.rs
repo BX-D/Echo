@@ -8,6 +8,7 @@ use dashmap::DashMap;
 use fear_engine_storage::Database;
 use tower_http::cors::CorsLayer;
 
+use crate::echo_protocol::content::EchoContent;
 use crate::routes;
 use crate::ws;
 
@@ -15,6 +16,8 @@ use crate::ws;
 pub struct AppState {
     /// Database handle.
     pub db: Database,
+    /// Echo Protocol authored content bundle.
+    pub echo_content: Arc<EchoContent>,
     /// Currently active WebSocket game sessions, keyed by session ID.
     pub sessions: DashMap<String, ws::session::GameSession>,
 }
@@ -34,6 +37,9 @@ impl AppState {
     pub fn new(db: Database) -> Self {
         Self {
             db,
+            echo_content: Arc::new(
+                EchoContent::load().expect("failed to load Echo Protocol content"),
+            ),
             sessions: DashMap::new(),
         }
     }

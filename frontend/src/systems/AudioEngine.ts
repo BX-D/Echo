@@ -263,6 +263,12 @@ interface CueParams {
 
 const CUE_PARAMS: Record<string, CueParams> = {
   default: { type: "sine", freq: 40, duration: 0.5, volume: 0.2, pan: 0 },
+  office_hum: { type: "sine", freq: 58, duration: 2.6, volume: 0.1, pan: 0 },
+  terminal_handshake: { type: "triangle", freq: 340, duration: 0.18, volume: 0.18, pan: 0 },
+  soft_boot: { type: "sine", freq: 220, duration: 0.14, volume: 0.14, pan: 0 },
+  archive_click: { type: "square", freq: 1450, duration: 0.08, volume: 0.18, pan: -0.15 },
+  heartbeat_countdown: { type: "sine", freq: 52, duration: 0.22, volume: 0.3, pan: 0 },
+  alarm_stutter: { type: "square", freq: 980, duration: 0.18, volume: 0.24, pan: 0.1 },
   dripping_water: { type: "sine", freq: 800, duration: 0.1, volume: 0.15, pan: 0.3 },
   door_creak: { type: "sawtooth", freq: 120, duration: 0.8, volume: 0.25, pan: -0.4 },
   footsteps: { type: "triangle", freq: 100, duration: 0.15, volume: 0.2, pan: 0.5 },

@@ -775,7 +775,9 @@ pub fn build_session_script_graph() -> SceneGraph {
     ];
 
     for scene in scenes {
-        graph.add_scene(scene).expect("duplicate session script scene id");
+        graph
+            .add_scene(scene)
+            .expect("duplicate session script scene id");
     }
 
     graph

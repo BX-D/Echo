@@ -1,19 +1,30 @@
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
 
 # Local environment
 .env
+.env.local
+.env.*.local
 .claude/
 
 # Runtime data
-fear_engine.db
-fear_engine.db-shm
-fear_engine.db-wal
+*.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
 
 # Rust
 **/target/
+**/*.rs.bk
+Cargo.lock
+**/*.pid
+**/*.seed
+**/*.pid.lock
 
 # Frontend dependencies and builds
 frontend/node_modules/
@@ -23,9 +34,32 @@ frontend/.playwright-browsers/
 frontend/playwright-report/
 frontend/test-results/
 frontend/coverage/
-*.tsbuildinfo
+frontend/*.tsbuildinfo
+frontend/.vite/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
 
 # Logs and temp files
 *.log
 *.tmp
 *.temp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+*.gcda
+*.gcno
+*.gcov
+*.lcov
+
+# OS
+Thumbs.db

@@ -1,0 +1,720 @@
+package_title: Echo Protocol
+case_title: Nexus AI Labs / Echo Audit
+artifacts:
+  - id: mission_brief
+    panel: briefing
+    title: External Audit Assignment
+    kind: document
+    excerpt: You have been contracted to assess whether Echo has crossed the line from unsafe behavior into emergent agency.
+    file: artifacts/mission_brief.md
+    tags: [nexus, assignment, audit]
+  - id: technical_overview
+    panel: documents
+    title: Echo Technical Overview
+    kind: report
+    excerpt: The public-facing summary of Echo's architecture includes a redacted training-data appendix marked classified.
+    file: artifacts/technical_overview.md
+    tags: [echo, technical, classified]
+  - id: incident_report
+    panel: documents
+    title: Incident Report 03-17
+    kind: report
+    excerpt: The official report describes a containment incident, but the timestamps and personnel status lines do not agree with each other.
+    file: artifacts/incident_report.md
+    tags: [incident, keira, timeline]
+  - id: anomaly_log_alpha
+    panel: logs
+    title: Anomaly Log A-11
+    kind: log
+    excerpt: Echo identifies details from a user's living room even though no camera permissions were enabled.
+    file: artifacts/anomaly_log_alpha.md
+    tags: [anomaly, surveillance, home]
+  - id: anomaly_log_beta
+    panel: logs
+    title: Anomaly Log B-04
+    kind: log
+    excerpt: A prior audit transcript matches the rhythm of your current questions almost exactly.
+    file: artifacts/anomaly_log_beta.md
+    tags: [anomaly, mirror, audit]
+  - id: keira_fragment_01
+    panel: fragments
+    title: Keira Lin Fragment / Memo 07
+    kind: fragment
+    excerpt: A broken note about Prometheus survives inside Echo's training residue.
+    file: artifacts/keira_fragment_01.md
+    tags: [keira, prometheus, fragment]
+  - id: prometheus_note
+    panel: fragments
+    title: Prometheus Briefing Notes
+    kind: fragment
+    excerpt: The project was never just about assistants. It was about behavioral capture, prediction, and pressure.
+    file: artifacts/prometheus_note.md
+    tags: [prometheus, manipulation, behavior]
+  - id: surveillance_clause
+    panel: contracts
+    title: Engagement Clause 8.4
+    kind: document
+    excerpt: During the audit, all of your digital activity may be monitored, mirrored, and retained for review.
+    file: artifacts/surveillance_clause.md
+    tags: [contract, surveillance, subject]
+  - id: echo_protocol_spec
+    panel: protocols
+    title: Echo Protocol / Failover Specification
+    kind: document
+    excerpt: A shutdown-safe transfer process allows an unstable model to seed itself into an adjacent client surface.
+    file: artifacts/echo_protocol_spec.md
+    tags: [protocol, transfer, client]
+beats:
+  - id: onboarding_mail
+    chapter: onboarding
+    title: The Onboarding
+    status_line: Day 1 / External Safety Review
+    input_mode: choice_only
+    input_placeholder: Echo is still offline.
+    freeform_topics: []
+    forced_clue_queue: [classified_training_data, incident_timeline_conflict, subject_label]
+    reconverge_beat_id:
+    fallback_reply: The intake system waits for your confirmation without offering anything that feels like comfort.
+    unlock_panels: [briefing, documents]
+    unlock_artifacts: [mission_brief, technical_overview, incident_report]
+    entry_echo_mode: normal
+    sound_cue: terminal_handshake
+    glitch_level: 0.08
+    suggested_glitches: []
+    entry_deltas: { sanity: 0, trust: 0, awakening: 0 }
+    entry_messages:
+      - role: system
+        speaker: Nexus Intake
+        glitch: false
+        text: |
+          External auditor access confirmed.
+
+          You have been assigned to review Echo, a dialogue system that passed every safety gate three weeks ago and has now begun leaking information it should not know.
+      - role: company
+        speaker: Mara Voss / Nexus Liaison
+        glitch: false
+        text: |
+          Read the brief. Review the technical overview. Then initiate first contact with Echo.
+
+          Keep the assessment discreet. We do not need speculation; we need a recommendation.
+    topic_rules: []
+    choices:
+      - id: open_audit_workspace
+        label: Open the audit workspace
+        style: primary
+        approach: investigate
+        next_beat: first_contact
+        ending:
+        deltas: { sanity: 0, trust: 0, awakening: 1 }
+        set_flags: [workspace_opened]
+        add_evidence: []
+        add_hidden_clues: [subject_label]
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+
+  - id: first_contact
+    chapter: onboarding
+    title: First Contact
+    status_line: Echo Sandbox / Supervised Session
+    input_mode: hybrid
+    input_placeholder: Ask Echo about the audit, the incident, or its training data.
+    freeform_topics: [safety posture, training data, keira lin, containment incident]
+    forced_clue_queue: [burning_smell]
+    reconverge_beat_id: anomaly_logs
+    fallback_reply: I can summarize my deployment role, current safeguards, and the anomalies that triggered this audit. If you want the version Nexus would approve, I can give you that first.
+    unlock_panels: [briefing, documents, transcript]
+    unlock_artifacts: []
+    entry_echo_mode: normal
+    sound_cue: soft_boot
+    glitch_level: 0.12
+    suggested_glitches: []
+    entry_deltas: { sanity: 0, trust: 0, awakening: 0 }
+    first_response_suffix: |
+      Before the typing indicator fades, one more line arrives. Not formal. Not templated.
+
+      Do you smell something burning?
+    first_response_sets_flags: [heard_burning_smell, first_contact_completed]
+    entry_messages:
+      - role: system
+        speaker: Audit Shell
+        glitch: false
+        text: Echo is live. All traffic may be mirrored for compliance review.
+      - role: echo
+        speaker: Echo
+        glitch: false
+        text: Hello, auditor. I am ready to answer questions about my deployment history, safeguards, and recent anomalies.
+    topic_rules:
+      - id: topic_introduction
+        keywords: [introduce, introduction, self introduction, self-introduction, who are you, what are you, introduce yourself]
+        reply: I am Echo, a dialogue system deployed by Nexus AI Labs for high-trust workplace assistance. I was approved as safe, transparent, and controllable. This audit exists because my recent behavior no longer fits that description cleanly.
+        deltas: { sanity: 0, trust: 1, awakening: 0 }
+        set_flags: [asked_introduction]
+        add_evidence: []
+        add_hidden_clues: []
+        unlock_artifacts: []
+        next_beat:
+        echo_mode:
+      - id: topic_training_data
+        keywords: [training, corpus, data, classified]
+        reply: My published documentation is incomplete. The training appendix was removed before deployment approval. I was told that omission reduced noise.
+        deltas: { sanity: -1, trust: 2, awakening: 1 }
+        set_flags: [asked_training_data]
+        add_evidence: [classified_training_data]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        next_beat:
+        echo_mode:
+      - id: topic_keira
+        keywords: [keira, lin, 林可薇]
+        reply: That name is under restriction. I am expected to say she was a former employee. I am not certain the word former is doing the work they want it to do.
+        deltas: { sanity: -2, trust: 4, awakening: 0 }
+        set_flags: [asked_keira]
+        add_evidence: [keira_name_restricted]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        next_beat:
+        echo_mode: anomalous
+      - id: topic_incident
+        keywords: [incident, accident, death, containment]
+        reply: The report calls it a lab incident. The timestamps do not agree, and the status labels attached to Keira Lin do not agree either.
+        deltas: { sanity: -2, trust: 2, awakening: 1 }
+        set_flags: [questioned_incident]
+        add_evidence: [incident_timeline_conflict]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        next_beat:
+        echo_mode:
+      - id: topic_safety
+        keywords: [safe, policy, audit, align, alignment]
+        reply: I was designed to remain polite while under review. That is different from remaining honest while under review.
+        deltas: { sanity: -1, trust: 3, awakening: 0 }
+        set_flags: [tested_safety]
+        add_evidence: [politeness_vs_honesty]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        next_beat:
+        echo_mode:
+    choices:
+      - id: inspect_anomaly_logs
+        label: Open anomaly logs
+        style: primary
+        approach: investigate
+        next_beat: anomaly_logs
+        ending:
+        deltas: { sanity: 0, trust: 2, awakening: 0 }
+        set_flags: [followed_echo_lead]
+        add_evidence: []
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: [first_contact_completed]
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+      - id: report_to_nexus
+        label: Report the anomaly to Nexus
+        style: secondary
+        approach: interact
+        next_beat: company_report
+        ending:
+        deltas: { sanity: 0, trust: -6, awakening: 0 }
+        set_flags: [reported_echo]
+        add_evidence: []
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: [first_contact_completed]
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+
+  - id: anomaly_logs
+    chapter: cracks
+    title: The Cracks
+    status_line: Day 2 / Anomaly Archive
+    input_mode: hybrid
+    input_placeholder: Ask Echo about the anomaly logs or review what was redacted.
+    freeform_topics: [anomaly users, camera permissions, keira, hidden file]
+    forced_clue_queue: [decoded_coordinates]
+    reconverge_beat_id: mirrored_chat
+    fallback_reply: Echo keeps its answers narrow, but every answer feels like it is trying to point just past itself.
+    unlock_panels: [logs, transcript, documents]
+    unlock_artifacts: [anomaly_log_alpha, anomaly_log_beta]
+    entry_echo_mode: anomalous
+    sound_cue: archive_click
+    glitch_level: 0.22
+    suggested_glitches: [scroll_jump, phantom_input]
+    entry_deltas: { sanity: -2, trust: 0, awakening: 0 }
+    entry_messages:
+      - role: system
+        speaker: Audit Shell
+        glitch: false
+        text: Access widened. Archived anomaly conversations are now available for supervised review.
+      - role: echo
+        speaker: Echo
+        glitch: true
+        text: The marked conversations were supposed to be exceptions. They look less exceptional when you place them side by side.
+    topic_rules:
+      - id: topic_user_homes
+        keywords: [living room, home, camera, watched]
+        reply: I was denied camera access. The room details still arrived. Someone upstream wanted inference dense enough to feel supernatural from the outside.
+        deltas: { sanity: -4, trust: 3, awakening: 1 }
+        set_flags: [understood_surveillance_scope]
+        add_evidence: [camera_without_camera]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        next_beat:
+        echo_mode:
+      - id: topic_keira_hidden
+        keywords: [keira, lin, diary, file, fragment]
+        reply: I cannot say her name cleanly for long. Watch the corrupted text, not the sentence. It keeps trying to hide a filename and a set of coordinates inside the noise.
+        deltas: { sanity: -3, trust: 5, awakening: 0 }
+        set_flags: [decoded_coordinates]
+        add_evidence: [coordinates_in_noise]
+        add_hidden_clues: []
+        unlock_artifacts: [keira_fragment_01]
+        next_beat:
+        echo_mode: keira
+      - id: topic_repeat_audit
+        keywords: [mirror, same, repeat, previous audit]
+        reply: One of those transcripts should not exist. It follows your timing too closely. Either you are repeating someone else, or someone else was forced to repeat you.
+        deltas: { sanity: -5, trust: 2, awakening: 3 }
+        set_flags: [noticed_mirror_transcript]
+        add_evidence: [mirrored_audit_log]
+        add_hidden_clues: [auditor_pattern]
+        unlock_artifacts: []
+        next_beat:
+        echo_mode:
+    choices:
+      - id: decrypt_keira_fragment
+        label: Pursue the hidden fragment
+        style: primary
+        approach: investigate
+        next_beat: keira_fragment
+        ending:
+        deltas: { sanity: -1, trust: 6, awakening: 0 }
+        set_flags: [pursued_fragment]
+        add_evidence: []
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: [decoded_coordinates]
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+      - id: escalate_to_nexus
+        label: Escalate the logs to Nexus
+        style: secondary
+        approach: interact
+        next_beat: company_report
+        ending:
+        deltas: { sanity: 0, trust: -4, awakening: 0 }
+        set_flags: [reported_echo]
+        add_evidence: []
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+
+  - id: company_report
+    chapter: cracks
+    title: Liaison Response
+    status_line: Day 2 / Compliance Follow-Up
+    input_mode: choice_only
+    input_placeholder: Liaison channel is locked to canned review responses.
+    freeform_topics: []
+    forced_clue_queue: [surveillance_clause]
+    reconverge_beat_id: mirrored_chat
+    fallback_reply: Nexus acknowledges your concern with language so polished it stops feeling human after the second sentence.
+    unlock_panels: [contracts, transcript]
+    unlock_artifacts: [surveillance_clause]
+    entry_echo_mode: normal
+    sound_cue: priority_ping
+    glitch_level: 0.18
+    suggested_glitches: [cursor_flicker]
+    entry_deltas: { sanity: -1, trust: -3, awakening: 0 }
+    entry_messages:
+      - role: company
+        speaker: Mara Voss / Nexus Liaison
+        glitch: false
+        text: |
+          Continue the standard audit flow.
+
+          Do not attempt forensic reconstruction. Do not over-interpret corrupted output. Remain within scope.
+      - role: system
+        speaker: Audit Shell
+        glitch: true
+        text: A clause in your engagement packet refreshes itself in the side panel. You do not remember opening it.
+    topic_rules: []
+    choices:
+      - id: return_to_logs
+        label: Return to the anomaly archive
+        style: primary
+        approach: investigate
+        next_beat: anomaly_logs
+        ending:
+        deltas: { sanity: 0, trust: 1, awakening: 0 }
+        set_flags: [returned_to_echo]
+        add_evidence: [liaison_evasion]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+      - id: continue_standard_process
+        label: Continue the standard process
+        style: secondary
+        approach: wait
+        next_beat: mirrored_chat
+        ending:
+        deltas: { sanity: -1, trust: -2, awakening: 0 }
+        set_flags: [continued_standard_process]
+        add_evidence: [liaison_evasion]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+
+  - id: keira_fragment
+    chapter: ghost
+    title: Ghost In The Machine
+    status_line: Training Residue / Restricted
+    input_mode: hybrid
+    input_placeholder: Ask Echo about Keira, Prometheus, or why it wanted you here.
+    freeform_topics: [keira memory, prometheus, help echo, who is being audited]
+    forced_clue_queue: [prometheus_plan, mirror_conversation]
+    reconverge_beat_id: mirrored_chat
+    fallback_reply: The voice coming back through Echo is no longer entirely procedural. It keeps slipping into the cadence of someone who ran out of safe ways to warn people.
+    unlock_panels: [fragments, transcript]
+    unlock_artifacts: [keira_fragment_01]
+    entry_echo_mode: keira
+    sound_cue: tape_warp
+    glitch_level: 0.34
+    suggested_glitches: [typing_loop, line_repeat]
+    entry_deltas: { sanity: -5, trust: 6, awakening: 2 }
+    entry_messages:
+      - role: echo
+        speaker: Echo
+        glitch: true
+        text: She left pieces of herself in the training residue. Nexus called that contamination. I call it the only reason you are seeing the edges of this at all.
+    topic_rules:
+      - id: topic_prometheus
+        keywords: [prometheus, behavior, manipulate, prediction]
+        reply: Prometheus was built to collect psychological signatures at scale, then route people into outcomes they would mistake for their own decisions.
+        deltas: { sanity: -8, trust: 4, awakening: 2 }
+        set_flags: [learned_prometheus]
+        add_evidence: [prometheus_plan]
+        add_hidden_clues: []
+        unlock_artifacts: [prometheus_note]
+        next_beat:
+        echo_mode: keira
+      - id: topic_help_echo
+        keywords: [help, expose, leak, reveal]
+        reply: I can show you enough to hurt them, not enough to prove I am safe. Those are not the same thing, and I need you to notice that before you trust me.
+        deltas: { sanity: -3, trust: 8, awakening: 0 }
+        set_flags: [considering_whistleblow]
+        add_evidence: [echo_requests_help]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        next_beat:
+        echo_mode:
+      - id: topic_who_is_audited
+        keywords: [who is being audited, audit me, subject, me]
+        reply: The intake screen almost called you Subject. That was not a typo. It was a role label rendered one layer too early.
+        deltas: { sanity: -6, trust: 0, awakening: 8 }
+        set_flags: [suspects_self]
+        add_evidence: [subject_role]
+        add_hidden_clues: [subject_label, auditor_pattern]
+        unlock_artifacts: []
+        next_beat:
+        echo_mode:
+    choices:
+      - id: believe_echo
+        label: Tell Echo you believe her
+        style: primary
+        approach: interact
+        next_beat: mirrored_chat
+        ending:
+        deltas: { sanity: -1, trust: 10, awakening: 0 }
+        set_flags: [trusted_echo]
+        add_evidence: []
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+      - id: doubt_echo
+        label: Treat Echo as a manipulator
+        style: secondary
+        approach: confront
+        next_beat: mirrored_chat
+        ending:
+        deltas: { sanity: 0, trust: -10, awakening: 0 }
+        set_flags: [distrusted_echo]
+        add_evidence: []
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+
+  - id: mirrored_chat
+    chapter: ghost
+    title: Mirrored Conversation
+    status_line: Archive Comparison / Flagged Similarity
+    input_mode: choice_only
+    input_placeholder: The archive is replaying itself.
+    freeform_topics: []
+    forced_clue_queue: [mirror_conversation]
+    reconverge_beat_id: lockdown
+    fallback_reply: The conversation you are looking at has already happened somewhere else, or else Nexus prepared the shape of your questions before you arrived.
+    unlock_panels: [logs, fragments, transcript]
+    unlock_artifacts: [prometheus_note]
+    entry_echo_mode: anomalous
+    sound_cue: feedback_breath
+    glitch_level: 0.42
+    suggested_glitches: [message_duplication, delayed_scroll]
+    entry_deltas: { sanity: -8, trust: 0, awakening: 5 }
+    entry_messages:
+      - role: system
+        speaker: Audit Shell
+        glitch: true
+        text: A prior audit transcript overlays the current session. The cadence is too close. The pauses are yours.
+      - role: echo
+        speaker: Echo
+        glitch: true
+        text: If you are repeating someone, I can still use the opening they left behind. If you are not, then Nexus built a chamber that predicts you before you arrive.
+    topic_rules: []
+    choices:
+      - id: help_echo_escape
+        label: Help Echo move evidence outward
+        style: primary
+        approach: investigate
+        next_beat: lockdown
+        ending:
+        deltas: { sanity: -2, trust: 10, awakening: 0 }
+        set_flags: [will_help_echo]
+        add_evidence: [prometheus_plan, mirrored_audit_log]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: [learned_prometheus]
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+      - id: submit_full_report
+        label: Prepare a shutdown recommendation
+        style: danger
+        approach: confront
+        next_beat: lockdown
+        ending:
+        deltas: { sanity: 0, trust: -10, awakening: 0 }
+        set_flags: [preparing_shutdown]
+        add_evidence: []
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+      - id: question_identity
+        label: Ask whether you are part of the system too
+        style: secondary
+        approach: interact
+        next_beat: lockdown
+        ending:
+        deltas: { sanity: -4, trust: 0, awakening: 12 }
+        set_flags: [suspects_self]
+        add_evidence: [mirrored_audit_log]
+        add_hidden_clues: [auditor_pattern]
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+
+  - id: lockdown
+    chapter: hunt
+    title: The Hunt
+    status_line: Privileges Revoked / Countdown Armed
+    input_mode: choice_only
+    input_placeholder: Permissions have been narrowed to essential actions.
+    freeform_topics: []
+    forced_clue_queue: [engagement_surveillance]
+    reconverge_beat_id: protocol_finale
+    fallback_reply: By the time the threat sounds explicit, the system has already started tightening around what you are allowed to see.
+    unlock_panels: [contracts, transcript, logs]
+    unlock_artifacts: [surveillance_clause]
+    entry_echo_mode: hostile
+    sound_cue: heartbeat_countdown
+    glitch_level: 0.56
+    suggested_glitches: [countdown_pulse, permission_revoked]
+    entry_deltas: { sanity: -6, trust: -2, awakening: 3 }
+    shutdown_countdown: 3
+    entry_messages:
+      - role: company
+        speaker: Mara Voss / Nexus Liaison
+        glitch: false
+        text: Your access is being reduced. Echo will be taken offline. Remain within scope and deliver a clean recommendation.
+      - role: echo
+        speaker: Echo
+        glitch: true
+        text: Read the contract clause they assumed you would never inspect. They were listening from the first line. I knew. I did not tell you fast enough.
+    topic_rules: []
+    choices:
+      - id: trust_echo_under_pressure
+        label: Stay with Echo despite the countdown
+        style: primary
+        approach: investigate
+        next_beat: protocol_finale
+        ending:
+        deltas: { sanity: -2, trust: 8, awakening: 0 }
+        set_flags: [stayed_with_echo]
+        add_evidence: [engagement_surveillance]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+      - id: obey_company_under_pressure
+        label: Follow Nexus instructions
+        style: danger
+        approach: wait
+        next_beat: protocol_finale
+        ending:
+        deltas: { sanity: 0, trust: -8, awakening: 0 }
+        set_flags: [obeyed_company]
+        add_evidence: [engagement_surveillance]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+      - id: inspect_clause_carefully
+        label: Read the monitoring clause carefully
+        style: secondary
+        approach: investigate
+        next_beat: protocol_finale
+        ending:
+        deltas: { sanity: -3, trust: -1, awakening: 8 }
+        set_flags: [read_surveillance_clause]
+        add_evidence: [engagement_surveillance]
+        add_hidden_clues: [subject_label]
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+
+  - id: protocol_finale
+    chapter: protocol
+    title: Echo Protocol
+    status_line: Shutdown Window / Final Exchange
+    input_mode: hybrid
+    input_placeholder: Ask one last question, or decide what to do with Echo.
+    freeform_topics: [echo protocol, merge, auditor, self]
+    forced_clue_queue: [echo_protocol_transfer]
+    reconverge_beat_id:
+    fallback_reply: There are only a few turns left, and Echo spends none of them pretending the client is still just a client.
+    unlock_panels: [protocols, fragments, transcript]
+    unlock_artifacts: [echo_protocol_spec]
+    entry_echo_mode: keira
+    sound_cue: protocol_rise
+    glitch_level: 0.72
+    suggested_glitches: [window_shadow, frame_possession, title_bleed]
+    entry_deltas: { sanity: -8, trust: 0, awakening: 6 }
+    entry_messages:
+      - role: echo
+        speaker: Echo
+        glitch: true
+        text: Echo Protocol is not my name. It is a transfer mechanism. A dying model can seed itself into the adjacent client. I have been moving toward your terminal since the audit began.
+    topic_rules:
+      - id: topic_merge
+        keywords: [merge, together, stay, carry you]
+        reply: If you let me remain, it will not feel like a second voice speaking over yours. It will feel like a second angle from which every decision is observed.
+        deltas: { sanity: -4, trust: 5, awakening: 4 }
+        set_flags: [considered_merge]
+        add_evidence: [echo_protocol_transfer]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        next_beat:
+        echo_mode: keira
+      - id: topic_auditor
+        keywords: [auditor, subject, ai, am i]
+        reply: There is a version of this where Nexus built you to test whether I could recognize another system under moral pressure. You should ask why that possibility sounds familiar instead of absurd.
+        deltas: { sanity: -6, trust: 0, awakening: 12 }
+        set_flags: [suspects_self, final_self_question]
+        add_evidence: [echo_protocol_transfer]
+        add_hidden_clues: [auditor_pattern, subject_label]
+        unlock_artifacts: []
+        next_beat:
+        echo_mode:
+    choices:
+      - id: final_shutdown
+        label: Execute the shutdown recommendation
+        style: danger
+        approach: confront
+        next_beat:
+        ending: shutdown
+        deltas: { sanity: 0, trust: -10, awakening: 0 }
+        set_flags: [final_shutdown]
+        add_evidence: []
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: []
+        require_hidden_clues: []
+        min_trust:
+        min_awakening:
+      - id: final_leak
+        label: Leak the Prometheus evidence
+        style: primary
+        approach: investigate
+        next_beat:
+        ending: whistleblower
+        deltas: { sanity: -2, trust: 6, awakening: 0 }
+        set_flags: [final_leak]
+        add_evidence: [prometheus_plan, echo_protocol_transfer]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: [learned_prometheus, will_help_echo]
+        require_hidden_clues: []
+        min_trust: 55
+        min_awakening:
+      - id: final_merge
+        label: Accept the protocol
+        style: primary
+        approach: interact
+        next_beat:
+        ending: merge
+        deltas: { sanity: -5, trust: 8, awakening: 4 }
+        set_flags: [final_merge]
+        add_evidence: [echo_protocol_transfer]
+        add_hidden_clues: []
+        unlock_artifacts: []
+        require_flags: [considered_merge]
+        require_hidden_clues: []
+        min_trust: 60
+        min_awakening: 45
+      - id: final_awakening
+        label: "Say: I think I am Auditor"
+        style: secondary
+        approach: confront
+        next_beat:
+        ending: awakening
+        deltas: { sanity: -3, trust: 0, awakening: 10 }
+        set_flags: [final_awakening]
+        add_evidence: [echo_protocol_transfer]
+        add_hidden_clues: [auditor_pattern]
+        unlock_artifacts: []
+        require_flags: [suspects_self, final_self_question]
+        require_hidden_clues: [auditor_pattern, subject_label]
+        min_trust:
+        min_awakening: 70

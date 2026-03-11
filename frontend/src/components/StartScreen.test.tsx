@@ -5,13 +5,13 @@ import StartScreen from "./StartScreen";
 describe("StartScreen", () => {
   it("renders the title", () => {
     render(<StartScreen onStart={vi.fn()} />);
-    expect(screen.getByText(/it learns your fear/i)).toBeInTheDocument();
+    expect(screen.getByText(/audit echo/i)).toBeInTheDocument();
   });
 
   it("renders the tagline", () => {
     render(<StartScreen onStart={vi.fn()} />);
     expect(
-      screen.getByText(/it is not trying to jump-scare you/i),
+      screen.getByText(/the rest of the session is less certain/i),
     ).toBeInTheDocument();
   });
 

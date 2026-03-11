@@ -10,8 +10,8 @@ use std::sync::Arc;
 
 use chrono::Utc;
 use fear_engine_common::types::{
-    Atmosphere, BehaviorEvent, BehaviorProfileSummary, Choice, ChoiceApproach, FearType,
-    GamePhase, MetaTarget, ServerMessage,
+    Atmosphere, BehaviorEvent, BehaviorProfileSummary, Choice, ChoiceApproach, FearType, GamePhase,
+    MetaTarget, ServerMessage,
 };
 use fear_engine_core::event_bus::EventBus;
 use fear_engine_core::scene::Scene;
@@ -228,10 +228,9 @@ impl SessionGameLoop {
             Ok(transition) => match transition.target {
                 ResolvedTarget::Static(scene) => {
                     self.current_scene_id = scene.id.clone();
-                    self.decorate_narrative_for_surface(self.scene_to_message(
-                        &scene,
-                        &transition.transition_effects,
-                    ))
+                    self.decorate_narrative_for_surface(
+                        self.scene_to_message(&scene, &transition.transition_effects),
+                    )
                 }
                 _ => {
                     self.current_scene_id = "cal_awakening".into();
@@ -257,7 +256,10 @@ impl SessionGameLoop {
 
     /// Builds the Reveal message from the current fear profile.
     pub fn build_reveal(&self) -> ServerMessage {
-        let history = self.db.get_scene_history(&self.session_id).unwrap_or_default();
+        let history = self
+            .db
+            .get_scene_history(&self.session_id)
+            .unwrap_or_default();
         let session = self
             .db
             .get_session(&self.session_id)
@@ -415,11 +417,9 @@ impl SessionGameLoop {
         self.persist_choice_for_current_scene(choice_id);
 
         // 2. Resolve next scene.
-        let transition = self.scene_manager.resolve_choice(
-            &self.current_scene_id,
-            choice_id,
-            &self.session_id,
-        );
+        let transition =
+            self.scene_manager
+                .resolve_choice(&self.current_scene_id, choice_id, &self.session_id);
 
         let (narrative, image_prompt, phase_change, dynamic_context) = match transition {
             Ok(t) => {
@@ -431,10 +431,9 @@ impl SessionGameLoop {
                     ResolvedTarget::Static(scene) => {
                         self.current_scene_id = scene.id.clone();
                         (
-                            self.decorate_narrative_for_surface(self.scene_to_message(
-                                scene,
-                                &t.transition_effects,
-                            )),
+                            self.decorate_narrative_for_surface(
+                                self.scene_to_message(scene, &t.transition_effects),
+                            ),
                             scene.image_prompt.clone(),
                             phase_change,
                             None,
@@ -449,8 +448,7 @@ impl SessionGameLoop {
             }
             Err(_) => {
                 // Bad choice or missing scene; enter next probe.
-                let (narrative, image_prompt, ai_context) =
-                    self.enter_next_structured_scene(None);
+                let (narrative, image_prompt, ai_context) = self.enter_next_structured_scene(None);
                 (narrative, image_prompt, None, ai_context)
             }
         };
@@ -495,10 +493,9 @@ impl SessionGameLoop {
             Ok(t) => match &t.target {
                 ResolvedTarget::Static(scene) => {
                     self.current_scene_id = scene.id.clone();
-                    let narrative = self.decorate_narrative_for_surface(self.scene_to_message(
-                        scene,
-                        &t.transition_effects,
-                    ));
+                    let narrative = self.decorate_narrative_for_surface(
+                        self.scene_to_message(scene, &t.transition_effects),
+                    );
                     let ai_context = self.scene_ai_context(scene, seed_context);
                     (narrative, scene.image_prompt.clone(), ai_context)
                 }
@@ -605,23 +602,14 @@ impl SessionGameLoop {
     }
 
     /// Replaces the newest persisted scene-history text for the current scene.
-    pub fn update_latest_scene_history_narrative(
-        &mut self,
-        message: &ServerMessage,
-    ) {
-        let ServerMessage::Narrative {
-            scene_id, text, ..
-        } = message
-        else {
+    pub fn update_latest_scene_history_narrative(&mut self, message: &ServerMessage) {
+        let ServerMessage::Narrative { scene_id, text, .. } = message else {
             return;
         };
 
         self.last_narrative = Some(message.clone());
         let snapshot_json = serde_json::to_string(&self.fear_profile.to_reveal_data()).ok();
-        let adaptation_strategy = self
-            .adaptation
-            .current_strategy()
-            .map(strategy_name);
+        let adaptation_strategy = self.adaptation.current_strategy().map(strategy_name);
 
         let _ = self.db.update_latest_scene_history_narrative(
             &self.session_id,
@@ -634,10 +622,7 @@ impl SessionGameLoop {
     }
 
     /// Persists a reveal marker into scene history for post-game inspection.
-    pub fn persist_reveal_history(
-        &self,
-        reveal: &ServerMessage,
-    ) {
+    pub fn persist_reveal_history(&self, reveal: &ServerMessage) {
         let ServerMessage::Reveal { .. } = reveal else {
             return;
         };
@@ -674,9 +659,7 @@ impl SessionGameLoop {
         let _ = self
             .db
             .update_session_state(&self.session_id, &self.current_scene_id, &state_json);
-        let _ = self
-            .db
-            .update_session_phase(&self.session_id, phase);
+        let _ = self.db.update_session_phase(&self.session_id, phase);
     }
 
     fn sync_fear_profile_to_db(&self) {
@@ -696,33 +679,20 @@ impl SessionGameLoop {
                 abandonment: self.fear_profile.score(&FearType::Abandonment),
                 anxiety_threshold: self.fear_profile.meta_patterns().anxiety_threshold,
                 recovery_speed: self.fear_profile.meta_patterns().recovery_speed,
-                curiosity_vs_avoidance: self
-                    .fear_profile
-                    .meta_patterns()
-                    .curiosity_vs_avoidance,
+                curiosity_vs_avoidance: self.fear_profile.meta_patterns().curiosity_vs_avoidance,
                 confidence_json: build_confidence_json(&self.fear_profile),
                 updated_at: Utc::now(),
             },
         );
     }
 
-    fn persist_scene_history(
-        &self,
-        message: &ServerMessage,
-        player_choice: Option<&str>,
-    ) {
-        let ServerMessage::Narrative {
-            scene_id, text, ..
-        } = message
-        else {
+    fn persist_scene_history(&self, message: &ServerMessage, player_choice: Option<&str>) {
+        let ServerMessage::Narrative { scene_id, text, .. } = message else {
             return;
         };
 
         let snapshot_json = serde_json::to_string(&self.fear_profile.to_reveal_data()).ok();
-        let adaptation_strategy = self
-            .adaptation
-            .current_strategy()
-            .map(strategy_name);
+        let adaptation_strategy = self.adaptation.current_strategy().map(strategy_name);
 
         let _ = self.db.insert_scene_history(&SceneHistoryEntry {
             id: None,
@@ -752,7 +722,10 @@ impl SessionGameLoop {
     }
 
     fn select_followup_scene_id(&self) -> Option<String> {
-        let history = self.db.get_scene_history(&self.session_id).unwrap_or_default();
+        let history = self
+            .db
+            .get_scene_history(&self.session_id)
+            .unwrap_or_default();
         let behavior_events = self
             .db
             .get_behavior_events(&self.session_id, None)
@@ -777,8 +750,10 @@ impl SessionGameLoop {
         history: &[SceneHistoryEntry],
         behavior_events: &[BehaviorEvent],
     ) -> Vec<fear_engine_common::types::FearScore> {
-        let mut evidence: HashMap<FearType, f64> =
-            FearType::all().into_iter().map(|fear| (fear, 0.0)).collect();
+        let mut evidence: HashMap<FearType, f64> = FearType::all()
+            .into_iter()
+            .map(|fear| (fear, 0.0))
+            .collect();
 
         for entry in history {
             let choice_fear = entry
@@ -812,8 +787,16 @@ impl SessionGameLoop {
                     let weight = (*dwell_ms as f64 / 12_000.0).clamp(0.0, 1.0);
                     match medium {
                         fear_engine_common::types::SurfaceMedium::Archive => {
-                            add_reveal_evidence(&mut evidence, FearType::Claustrophobia, 0.22 * weight);
-                            add_reveal_evidence(&mut evidence, FearType::LossOfControl, 0.28 * weight);
+                            add_reveal_evidence(
+                                &mut evidence,
+                                FearType::Claustrophobia,
+                                0.22 * weight,
+                            );
+                            add_reveal_evidence(
+                                &mut evidence,
+                                FearType::LossOfControl,
+                                0.28 * weight,
+                            );
                         }
                         fear_engine_common::types::SurfaceMedium::Transcript
                         | fear_engine_common::types::SurfaceMedium::Microphone => {
@@ -822,14 +805,26 @@ impl SessionGameLoop {
                         }
                         fear_engine_common::types::SurfaceMedium::Webcam
                         | fear_engine_common::types::SurfaceMedium::Mirror => {
-                            add_reveal_evidence(&mut evidence, FearType::Doppelganger, 0.35 * weight);
-                            add_reveal_evidence(&mut evidence, FearType::UncannyValley, 0.25 * weight);
+                            add_reveal_evidence(
+                                &mut evidence,
+                                FearType::Doppelganger,
+                                0.35 * weight,
+                            );
+                            add_reveal_evidence(
+                                &mut evidence,
+                                FearType::UncannyValley,
+                                0.25 * weight,
+                            );
                         }
                         fear_engine_common::types::SurfaceMedium::SystemDialog => {
                             add_reveal_evidence(&mut evidence, FearType::Stalking, 0.12 * weight);
                         }
                         fear_engine_common::types::SurfaceMedium::Questionnaire => {
-                            add_reveal_evidence(&mut evidence, FearType::LossOfControl, 0.12 * weight);
+                            add_reveal_evidence(
+                                &mut evidence,
+                                FearType::LossOfControl,
+                                0.12 * weight,
+                            );
                         }
                         fear_engine_common::types::SurfaceMedium::Chat => {
                             add_reveal_evidence(&mut evidence, FearType::Isolation, 0.08 * weight);
@@ -881,10 +876,7 @@ impl SessionGameLoop {
             .map(|fear| (fear, self.fear_profile.score(&fear)))
             .collect();
 
-        let raw_min = raw_scores
-            .values()
-            .copied()
-            .fold(f64::INFINITY, f64::min);
+        let raw_min = raw_scores.values().copied().fold(f64::INFINITY, f64::min);
         let raw_max = raw_scores
             .values()
             .copied()
@@ -896,10 +888,7 @@ impl SessionGameLoop {
         };
 
         let evidence_min = evidence.values().copied().fold(f64::INFINITY, f64::min);
-        let evidence_max = evidence
-            .values()
-            .copied()
-            .fold(f64::NEG_INFINITY, f64::max);
+        let evidence_max = evidence.values().copied().fold(f64::NEG_INFINITY, f64::max);
         let evidence_spread = if evidence_min.is_finite() && evidence_max.is_finite() {
             evidence_max - evidence_min
         } else {
@@ -924,10 +913,8 @@ impl SessionGameLoop {
                 } else {
                     (raw * 0.35 + mapped_evidence * 0.65).clamp(0.05, 0.95)
                 };
-                let confidence = (
-                    self.fear_profile.confidence_level(&fear) * 0.4
-                        + (evidence_score / 3.0).clamp(0.0, 1.0) * 0.6
-                )
+                let confidence = (self.fear_profile.confidence_level(&fear) * 0.4
+                    + (evidence_score / 3.0).clamp(0.0, 1.0) * 0.6)
                     .clamp(0.1, 1.0);
 
                 fear_engine_common::types::FearScore {
@@ -944,11 +931,7 @@ impl SessionGameLoop {
             .unwrap_or_else(|| "tmpl_climax_reveal".into())
     }
 
-    fn scene_ai_context(
-        &self,
-        scene: &Scene,
-        seed_context: Option<&str>,
-    ) -> Option<String> {
+    fn scene_ai_context(&self, scene: &Scene, seed_context: Option<&str>) -> Option<String> {
         if seed_context.is_none() && !scene.id.starts_with("tmpl_") {
             return None;
         }
@@ -986,8 +969,10 @@ impl SessionGameLoop {
                 fear_engine_common::types::BehaviorEventType::CameraPresence {
                     visible_ms,
                     sustained_presence,
-                } => Some((*visible_ms as f64 / 12_000.0).clamp(0.0, 1.0)
-                    + if *sustained_presence { 0.2 } else { 0.0 }),
+                } => Some(
+                    (*visible_ms as f64 / 12_000.0).clamp(0.0, 1.0)
+                        + if *sustained_presence { 0.2 } else { 0.0 },
+                ),
                 _ => None,
             })
             .fold(0.0, f64::max)
@@ -1034,7 +1019,8 @@ impl SessionGameLoop {
 
         for entry in history {
             if let Some(choice_id) = &entry.player_choice {
-                if let Some((_, _, approach)) = self.entry_choice_details(&entry.scene_id, choice_id)
+                if let Some((_, _, approach)) =
+                    self.entry_choice_details(&entry.scene_id, choice_id)
                 {
                     total_choices += 1.0;
                     match approach {
@@ -1147,7 +1133,9 @@ impl SessionGameLoop {
                         fast_recovery_samples += 1.0;
                     }
                 }
-                fear_engine_common::types::BehaviorEventType::DevicePermission { granted, .. } => {
+                fear_engine_common::types::BehaviorEventType::DevicePermission {
+                    granted, ..
+                } => {
                     if !granted {
                         permission_denials += 1.0;
                     }
@@ -1166,9 +1154,9 @@ impl SessionGameLoop {
         let mirror_weight = (mirror_dwell_ms / 20_000.0).clamp(0.0, 1.0);
         let camera_presence_weight = (camera_presence_ms / 20_000.0).clamp(0.0, 1.0);
         let silence_weight = (silence_dwell_ms / 16_000.0).clamp(0.0, 1.0);
-        let hover_uncertainty =
-            ((hover_spread / hover_denominator) * 0.5 + (hover_total_ms / 15_000.0) * 0.5)
-                .clamp(0.0, 1.0);
+        let hover_uncertainty = ((hover_spread / hover_denominator) * 0.5
+            + (hover_total_ms / 15_000.0) * 0.5)
+            .clamp(0.0, 1.0);
 
         BehaviorProfileSummary {
             compliance: (confront_or_explore / choice_denominator).clamp(0.0, 1.0),
@@ -1193,7 +1181,8 @@ impl SessionGameLoop {
                 + silence_return_count * 0.3)
                 / (choice_denominator + 1.0))
                 .clamp(0.0, 1.0),
-            recovery_after_escalation: (fast_recovery_samples / (focus_interruptions + fast_recovery_samples + 1.0))
+            recovery_after_escalation: (fast_recovery_samples
+                / (focus_interruptions + fast_recovery_samples + 1.0))
                 .clamp(0.0, 1.0),
             tolerance_after_violation: ((high_intensity_followthrough / escalation_denominator)
                 * 0.7
@@ -1204,18 +1193,17 @@ impl SessionGameLoop {
         }
     }
 
-    fn permission_granted(
-        &self,
-        behavior_events: &[BehaviorEvent],
-        device: &str,
-    ) -> Option<bool> {
-        behavior_events.iter().rev().find_map(|event| match &event.event_type {
-            fear_engine_common::types::BehaviorEventType::DevicePermission {
-                device: event_device,
-                granted,
-            } if event_device == device => Some(*granted),
-            _ => None,
-        })
+    fn permission_granted(&self, behavior_events: &[BehaviorEvent], device: &str) -> Option<bool> {
+        behavior_events
+            .iter()
+            .rev()
+            .find_map(|event| match &event.event_type {
+                fear_engine_common::types::BehaviorEventType::DevicePermission {
+                    device: event_device,
+                    granted,
+                } if event_device == device => Some(*granted),
+                _ => None,
+            })
     }
 
     fn scene_history_len(&self) -> usize {
@@ -1226,8 +1214,7 @@ impl SessionGameLoop {
     }
 
     fn is_terminal_surface(&self) -> bool {
-        self.current_scene_id == "tmpl_climax_reveal"
-            || self.current_scene_id.starts_with("final_")
+        self.current_scene_id == "tmpl_climax_reveal" || self.current_scene_id.starts_with("final_")
     }
 
     fn derive_system_messages(
@@ -1271,7 +1258,8 @@ impl SessionGameLoop {
                     ..
                 } => {
                     messages.push(ServerMessage::Meta {
-                        text: "You looked away the moment the system stopped sounding harmless.".into(),
+                        text: "You looked away the moment the system stopped sounding harmless."
+                            .into(),
                         target: MetaTarget::Overlay,
                         delay_ms: 180,
                     });
@@ -1382,9 +1370,12 @@ impl SessionGameLoop {
                 "surface progression".into()
             };
 
-            if moments.iter().any(|moment: &fear_engine_common::types::KeyMoment| {
-                moment.scene_id == entry.scene_id
-            }) {
+            if moments
+                .iter()
+                .any(|moment: &fear_engine_common::types::KeyMoment| {
+                    moment.scene_id == entry.scene_id
+                })
+            {
                 continue;
             }
 
@@ -1442,9 +1433,12 @@ impl SessionGameLoop {
                 .map(|scene| scene.intensity)
                 .unwrap_or(0.5);
 
-            if adaptations.iter().any(|adaptation: &fear_engine_common::types::AdaptationRecord| {
-                adaptation.scene_id == entry.scene_id
-            }) {
+            if adaptations
+                .iter()
+                .any(|adaptation: &fear_engine_common::types::AdaptationRecord| {
+                    adaptation.scene_id == entry.scene_id
+                })
+            {
                 continue;
             }
 
@@ -1538,10 +1532,8 @@ impl SessionGameLoop {
 
     fn rebuild_current_narrative(&self) -> ServerMessage {
         if let Ok(scene) = self.scene_manager.get_scene(&self.current_scene_id) {
-            return self.scene_to_message(
-                scene,
-                &transition_effects_for_atmosphere(scene.atmosphere),
-            );
+            return self
+                .scene_to_message(scene, &transition_effects_for_atmosphere(scene.atmosphere));
         }
         fallback_with_redirect(&self.current_scene_id)
     }
@@ -1687,11 +1679,10 @@ fn materialize_template_narrative(scene: &Scene, profile: &FearProfile) -> Strin
         ),
     ];
 
-    replacements
-        .into_iter()
-        .fold(scene.narrative.clone(), |text, (placeholder, replacement)| {
-            text.replace(placeholder, &replacement)
-        })
+    replacements.into_iter().fold(
+        scene.narrative.clone(),
+        |text, (placeholder, replacement)| text.replace(placeholder, &replacement),
+    )
 }
 
 fn primary_and_secondary_fears(profile: &FearProfile) -> (FearType, FearType) {
@@ -1799,8 +1790,12 @@ fn meta_text_for(
     }
 
     match fear {
-        FearType::LossOfControl => "You notice prediction only after it has already arranged the room.",
-        FearType::Doppelganger => "You keep checking whether the revised version arrives before you do.",
+        FearType::LossOfControl => {
+            "You notice prediction only after it has already arranged the room."
+        }
+        FearType::Doppelganger => {
+            "You keep checking whether the revised version arrives before you do."
+        }
         _ => "Your attention sharpens when the interface stops pretending to be neutral.",
     }
 }
@@ -1948,7 +1943,8 @@ fn present_scene_label(scene_id: &str) -> String {
 }
 
 fn present_identifier_label(value: &str) -> String {
-    value.split('_')
+    value
+        .split('_')
         .filter(|part| !part.is_empty())
         .map(|part| {
             let mut chars = part.chars();
@@ -2102,48 +2098,158 @@ fn probe_choices_for(scene_id: &str) -> Vec<Choice> {
     // Map probe scene IDs to their first choice (the "investigate" path).
     match scene_id {
         "probe_claustrophobia" => vec![
-            Choice { id: "enter_mechanical".into(), text: "Squeeze through the door".into(), approach: ChoiceApproach::Investigate, fear_vector: FearType::Claustrophobia },
-            Choice { id: "go_back_up".into(), text: "Climb back up".into(), approach: ChoiceApproach::Flee, fear_vector: FearType::Claustrophobia },
+            Choice {
+                id: "enter_mechanical".into(),
+                text: "Squeeze through the door".into(),
+                approach: ChoiceApproach::Investigate,
+                fear_vector: FearType::Claustrophobia,
+            },
+            Choice {
+                id: "go_back_up".into(),
+                text: "Climb back up".into(),
+                approach: ChoiceApproach::Flee,
+                fear_vector: FearType::Claustrophobia,
+            },
         ],
         "probe_isolation" => vec![
-            Choice { id: "approach_curtain".into(), text: "Walk to the curtained bed".into(), approach: ChoiceApproach::Investigate, fear_vector: FearType::Isolation },
-            Choice { id: "call_out_ward".into(), text: "Call out into the ward".into(), approach: ChoiceApproach::Confront, fear_vector: FearType::Isolation },
+            Choice {
+                id: "approach_curtain".into(),
+                text: "Walk to the curtained bed".into(),
+                approach: ChoiceApproach::Investigate,
+                fear_vector: FearType::Isolation,
+            },
+            Choice {
+                id: "call_out_ward".into(),
+                text: "Call out into the ward".into(),
+                approach: ChoiceApproach::Confront,
+                fear_vector: FearType::Isolation,
+            },
         ],
         "probe_body_horror" => vec![
-            Choice { id: "examine_xrays".into(), text: "Examine the X-rays".into(), approach: ChoiceApproach::Investigate, fear_vector: FearType::BodyHorror },
-            Choice { id: "leave_radiology".into(), text: "Leave quickly".into(), approach: ChoiceApproach::Flee, fear_vector: FearType::BodyHorror },
+            Choice {
+                id: "examine_xrays".into(),
+                text: "Examine the X-rays".into(),
+                approach: ChoiceApproach::Investigate,
+                fear_vector: FearType::BodyHorror,
+            },
+            Choice {
+                id: "leave_radiology".into(),
+                text: "Leave quickly".into(),
+                approach: ChoiceApproach::Flee,
+                fear_vector: FearType::BodyHorror,
+            },
         ],
         "probe_stalking" => vec![
-            Choice { id: "follow_prints".into(), text: "Follow the footprints".into(), approach: ChoiceApproach::Investigate, fear_vector: FearType::Stalking },
-            Choice { id: "confront_follower".into(), text: "Confront what's behind you".into(), approach: ChoiceApproach::Confront, fear_vector: FearType::Stalking },
+            Choice {
+                id: "follow_prints".into(),
+                text: "Follow the footprints".into(),
+                approach: ChoiceApproach::Investigate,
+                fear_vector: FearType::Stalking,
+            },
+            Choice {
+                id: "confront_follower".into(),
+                text: "Confront what's behind you".into(),
+                approach: ChoiceApproach::Confront,
+                fear_vector: FearType::Stalking,
+            },
         ],
         "probe_loss_of_control" => vec![
-            Choice { id: "try_door".into(), text: "Force the door open".into(), approach: ChoiceApproach::Confront, fear_vector: FearType::LossOfControl },
-            Choice { id: "examine_table".into(), text: "Examine the operating table".into(), approach: ChoiceApproach::Investigate, fear_vector: FearType::LossOfControl },
+            Choice {
+                id: "try_door".into(),
+                text: "Force the door open".into(),
+                approach: ChoiceApproach::Confront,
+                fear_vector: FearType::LossOfControl,
+            },
+            Choice {
+                id: "examine_table".into(),
+                text: "Examine the operating table".into(),
+                approach: ChoiceApproach::Investigate,
+                fear_vector: FearType::LossOfControl,
+            },
         ],
         "probe_uncanny" => vec![
-            Choice { id: "approach_nurse".into(), text: "Approach the nurse".into(), approach: ChoiceApproach::Interact, fear_vector: FearType::UncannyValley },
-            Choice { id: "back_away".into(), text: "Back out quietly".into(), approach: ChoiceApproach::Avoid, fear_vector: FearType::UncannyValley },
+            Choice {
+                id: "approach_nurse".into(),
+                text: "Approach the nurse".into(),
+                approach: ChoiceApproach::Interact,
+                fear_vector: FearType::UncannyValley,
+            },
+            Choice {
+                id: "back_away".into(),
+                text: "Back out quietly".into(),
+                approach: ChoiceApproach::Avoid,
+                fear_vector: FearType::UncannyValley,
+            },
         ],
         "probe_darkness" => vec![
-            Choice { id: "stay_dark".into(), text: "Stay still in the dark".into(), approach: ChoiceApproach::Wait, fear_vector: FearType::Darkness },
-            Choice { id: "feel_walls".into(), text: "Feel for a light switch".into(), approach: ChoiceApproach::Investigate, fear_vector: FearType::Darkness },
+            Choice {
+                id: "stay_dark".into(),
+                text: "Stay still in the dark".into(),
+                approach: ChoiceApproach::Wait,
+                fear_vector: FearType::Darkness,
+            },
+            Choice {
+                id: "feel_walls".into(),
+                text: "Feel for a light switch".into(),
+                approach: ChoiceApproach::Investigate,
+                fear_vector: FearType::Darkness,
+            },
         ],
         "probe_sound" => vec![
-            Choice { id: "listen_closely".into(), text: "Press your ear to the speaker".into(), approach: ChoiceApproach::Investigate, fear_vector: FearType::SoundBased },
-            Choice { id: "smash_intercom".into(), text: "Rip the intercom off the wall".into(), approach: ChoiceApproach::Confront, fear_vector: FearType::SoundBased },
+            Choice {
+                id: "listen_closely".into(),
+                text: "Press your ear to the speaker".into(),
+                approach: ChoiceApproach::Investigate,
+                fear_vector: FearType::SoundBased,
+            },
+            Choice {
+                id: "smash_intercom".into(),
+                text: "Rip the intercom off the wall".into(),
+                approach: ChoiceApproach::Confront,
+                fear_vector: FearType::SoundBased,
+            },
         ],
         "probe_doppelganger" => vec![
-            Choice { id: "touch_mirror".into(), text: "Touch the mirror".into(), approach: ChoiceApproach::Interact, fear_vector: FearType::Doppelganger },
-            Choice { id: "look_away".into(), text: "Look away and leave".into(), approach: ChoiceApproach::Avoid, fear_vector: FearType::Doppelganger },
+            Choice {
+                id: "touch_mirror".into(),
+                text: "Touch the mirror".into(),
+                approach: ChoiceApproach::Interact,
+                fear_vector: FearType::Doppelganger,
+            },
+            Choice {
+                id: "look_away".into(),
+                text: "Look away and leave".into(),
+                approach: ChoiceApproach::Avoid,
+                fear_vector: FearType::Doppelganger,
+            },
         ],
         "probe_abandonment" => vec![
-            Choice { id: "read_more_notes".into(), text: "Search for more notes".into(), approach: ChoiceApproach::Investigate, fear_vector: FearType::Abandonment },
-            Choice { id: "go_to_car".into(), text: "Try to reach the car".into(), approach: ChoiceApproach::Flee, fear_vector: FearType::Abandonment },
+            Choice {
+                id: "read_more_notes".into(),
+                text: "Search for more notes".into(),
+                approach: ChoiceApproach::Investigate,
+                fear_vector: FearType::Abandonment,
+            },
+            Choice {
+                id: "go_to_car".into(),
+                text: "Try to reach the car".into(),
+                approach: ChoiceApproach::Flee,
+                fear_vector: FearType::Abandonment,
+            },
         ],
         _ => vec![
-            Choice { id: "explore".into(), text: "Continue forward".into(), approach: ChoiceApproach::Investigate, fear_vector: FearType::Darkness },
-            Choice { id: "wait".into(), text: "Stay still".into(), approach: ChoiceApproach::Wait, fear_vector: FearType::Stalking },
+            Choice {
+                id: "explore".into(),
+                text: "Continue forward".into(),
+                approach: ChoiceApproach::Investigate,
+                fear_vector: FearType::Darkness,
+            },
+            Choice {
+                id: "wait".into(),
+                text: "Stay still".into(),
+                approach: ChoiceApproach::Wait,
+                fear_vector: FearType::Stalking,
+            },
         ],
     }
 }
@@ -2172,19 +2278,13 @@ fn has_profile_update_signal(events: &[BehaviorEvent]) -> bool {
     })
 }
 
-fn add_reveal_evidence(
-    evidence: &mut HashMap<FearType, f64>,
-    fear: FearType,
-    weight: f64,
-) {
+fn add_reveal_evidence(evidence: &mut HashMap<FearType, f64>, fear: FearType, weight: f64) {
     if let Some(score) = evidence.get_mut(&fear) {
         *score += weight.max(0.0);
     }
 }
 
-fn strategy_name(
-    strategy: &fear_engine_common::types::AdaptationStrategy,
-) -> String {
+fn strategy_name(strategy: &fear_engine_common::types::AdaptationStrategy) -> String {
     match strategy {
         fear_engine_common::types::AdaptationStrategy::Probe { .. } => "probe",
         fear_engine_common::types::AdaptationStrategy::GradualEscalation { .. } => {
@@ -2223,7 +2323,9 @@ mod tests {
         let mut gl = make_loop();
         let msg = gl.start_game();
         match msg {
-            ServerMessage::Narrative { scene_id, choices, .. } => {
+            ServerMessage::Narrative {
+                scene_id, choices, ..
+            } => {
                 assert_eq!(scene_id, "cal_awakening");
                 assert!(!choices.is_empty());
             }
@@ -2248,11 +2350,7 @@ mod tests {
     fn test_process_choice_with_invalid_choice_returns_fallback() {
         let mut gl = make_loop();
         gl.start_game();
-        let result = gl.process_choice(
-            "nonexistent_choice",
-            1500,
-            ChoiceApproach::Investigate,
-        );
+        let result = gl.process_choice("nonexistent_choice", 1500, ChoiceApproach::Investigate);
         match &result.narrative {
             ServerMessage::Narrative { scene_id, .. } => {
                 assert!(scene_id == "fallback" || !scene_id.is_empty());
@@ -2309,10 +2407,7 @@ mod tests {
             })
         ));
         let phase = gl.current_phase();
-        assert!(
-            phase == GamePhase::Exploring,
-            "unexpected phase: {phase:?}"
-        );
+        assert!(phase == GamePhase::Exploring, "unexpected phase: {phase:?}");
     }
 
     #[test]
@@ -2363,7 +2458,7 @@ mod tests {
         // Play through calibration.
         let _ = gl.process_choice("sit_up", 1500, ChoiceApproach::Investigate); // → cal_corridor
         let _ = gl.process_choice("go_left", 1500, ChoiceApproach::Investigate); // → cal_reception
-        // Should have progressed.
+                                                                                 // Should have progressed.
         assert_eq!(gl.current_scene_id(), "cal_reception");
     }
 
@@ -2437,12 +2532,7 @@ mod tests {
                 adaptation_log,
                 ..
             } => {
-                assert!(
-                    fear_profile
-                        .scores
-                        .iter()
-                        .any(|score| score.score > 0.05)
-                );
+                assert!(fear_profile.scores.iter().any(|score| score.score > 0.05));
                 assert!(!key_moments.is_empty());
                 assert_ne!(key_moments[0].scene_id, "cal_reception");
                 assert!(!key_moments[0].description.contains("tmpl_"));

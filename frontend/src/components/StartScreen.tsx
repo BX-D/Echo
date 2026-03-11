@@ -26,28 +26,29 @@ export default function StartScreen({ onStart }: StartScreenProps) {
           <div className="grid md:grid-cols-[1.15fr_0.85fr]">
             <div className="px-8 py-10 md:px-12 md:py-14 border-b md:border-b-0 md:border-r border-bone/10">
               <p className="text-[11px] uppercase tracking-[0.4em] text-blood/70 mb-4">
-                Session Mirror / Intake
+                Echo Protocol / Intake
               </p>
               <h1 className="text-5xl md:text-7xl font-horror text-bone mb-6 leading-[0.95]">
-                It Learns Your Fear
+                Audit Echo
               </h1>
               <p className="text-lg text-bone/72 font-body leading-relaxed max-w-2xl">
-                You are entering a session, not a story. The system will watch how you hesitate,
-                what you refuse, when you keep going, and how long you remain available once it
-                becomes too specific to trust.
+                Nexus AI Labs has hired you to review Echo, a dialogue system that has started
+                leaking information it should not know. The terminal looks ordinary now. It will
+                stop feeling ordinary once the session begins answering back.
               </p>
               <p className="mt-3 text-sm text-smoke/55 font-body italic">
-                It is not trying to jump-scare you. It is trying to decide what kind of person you are under observation.
+                You are here to decide whether Echo has become dangerous. Echo may already be
+                deciding what you are.
               </p>
               <div className="mt-10 grid gap-3 md:max-w-xl">
                 <div className="rounded-2xl border border-bone/10 bg-white/[0.03] px-4 py-3 text-sm text-smoke/70">
-                  The session measures hesitation, pacing, attention, and whether you keep choosing once you know you are being read.
+                  Review internal documents, anomaly logs, and fragmented notes while holding a live conversation with Echo.
                 </div>
                 <div className="rounded-2xl border border-bone/10 bg-white/[0.03] px-4 py-3 text-sm text-smoke/70">
-                  Camera and microphone are optional. Granting them changes the session. Refusing them also changes the session.
+                  Your choices change trust, sanity, and awakening. The company is not as neutral as the assignment email implied.
                 </div>
                 <div className="rounded-2xl border border-bone/10 bg-white/[0.03] px-4 py-3 text-sm text-smoke/70">
-                  At the end, the system does not tell you whether you won. It tells you what it thinks your behavior meant.
+                  If you stay long enough, the audit stops feeling one-directional.
                 </div>
               </div>
             </div>
@@ -55,12 +56,12 @@ export default function StartScreen({ onStart }: StartScreenProps) {
             <div className="px-8 py-10 md:px-10 md:py-14 flex flex-col justify-between bg-gradient-to-b from-white/[0.03] to-transparent">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.35em] text-smoke/55 mb-4">
-                  Consent Conditions
+                  Review Notes
                 </p>
                 <ul className="space-y-3 text-sm text-bone/68 font-body">
-                  <li>Observation may feel reassuring before it feels invasive.</li>
-                  <li>The system is interested in consent, withdrawal, silence, and continued attention.</li>
-                  <li>You may stop at any time, but departure is still a behavior pattern.</li>
+                  <li>Echo remains polite even when the subject matter stops being polite.</li>
+                  <li>Some of the materials in this terminal have been revised after the fact.</li>
+                  <li>The system may know more about the audit than the company admitted.</li>
                 </ul>
               </div>
 
@@ -75,7 +76,7 @@ export default function StartScreen({ onStart }: StartScreenProps) {
                   Press Enter to Begin
                 </button>
                 <p className="mt-4 text-xs text-smoke/45 font-body">
-                  This is a psychological session about how you behave once the system stops sounding neutral.
+                  The assignment says you are evaluating Echo. The rest of the session is less certain.
                 </p>
               </div>
             </div>

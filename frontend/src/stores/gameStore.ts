@@ -1,68 +1,46 @@
 import { create } from "zustand";
-import type { ConnectionStatus, GamePhase } from "../types/game";
+import type { ConnectionStatus } from "../types/game";
 import type {
-  ImagePayload,
+  EndingPayload,
   ErrorPayload,
+  ImagePayload,
   MetaPayload,
-  NarrativePayload,
-  PhaseChangePayload,
-  RevealPayload,
+  SessionSurfaceMessagePayload,
 } from "../types/ws";
 
-export interface GameState {
-  // Connection
-  connectionStatus: ConnectionStatus;
+export const SESSION_STORAGE_KEY = "echo_protocol_session_id";
 
-  // Game
+export interface GameState {
+  connectionStatus: ConnectionStatus;
   sessionId: string | null;
-  gamePhase: GamePhase | null;
-  currentScene: NarrativePayload | null;
-  sceneHistory: NarrativePayload[];
+  currentSurface: SessionSurfaceMessagePayload | null;
+  currentEnding: EndingPayload | null;
   currentImage: ImagePayload | null;
   currentMeta: MetaPayload | null;
-  revealData: RevealPayload | null;
   currentError: ErrorPayload | null;
-
-  // Fear meter
-  fearLevel: number; // 0–100
-  maxFear: number;
-
-  // Player selfie
   selfieUrl: string | null;
-
-  // Camera step done
-  cameraStepDone: boolean;
-
-  // Actions
   setConnectionStatus: (status: ConnectionStatus) => void;
-  setSessionId: (id: string) => void;
-  processNarrative: (msg: NarrativePayload) => void;
-  processPhaseChange: (msg: PhaseChangePayload) => void;
+  setSessionId: (id: string | null) => void;
+  processSessionSurface: (surface: SessionSurfaceMessagePayload) => void;
+  processEnding: (ending: EndingPayload) => void;
   processMeta: (msg: MetaPayload) => void;
   clearMeta: () => void;
   processImage: (msg: ImagePayload) => void;
-  processReveal: (msg: RevealPayload) => void;
   processError: (msg: ErrorPayload) => void;
   clearError: () => void;
   setSelfieUrl: (url: string | null) => void;
-  setCameraStepDone: () => void;
   reset: () => void;
 }
 
 const initialState = {
   connectionStatus: "disconnected" as ConnectionStatus,
   sessionId: null as string | null,
-  gamePhase: null as GamePhase | null,
-  currentScene: null as NarrativePayload | null,
-  sceneHistory: [] as NarrativePayload[],
+  currentSurface: null as SessionSurfaceMessagePayload | null,
+  currentEnding: null as EndingPayload | null,
   currentImage: null as ImagePayload | null,
   currentMeta: null as MetaPayload | null,
-  revealData: null as RevealPayload | null,
   currentError: null as ErrorPayload | null,
-  fearLevel: 0,
-  maxFear: 100,
   selfieUrl: null as string | null,
-  cameraStepDone: false,
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -70,38 +48,24 @@ export const useGameStore = create<GameState>((set) => ({
 
   setConnectionStatus: (status) => set({ connectionStatus: status }),
 
-  setSessionId: (id) => set({ sessionId: id }),
+  setSessionId: (id) => {
+    persistSessionId(id);
+    set({ sessionId: id });
+  },
 
-  processNarrative: (msg) =>
-    set((state) => {
-      if (state.currentScene?.scene_id === msg.scene_id) {
-        const sceneHistory =
-          state.sceneHistory.length > 0 &&
-          state.sceneHistory[state.sceneHistory.length - 1]?.scene_id ===
-            msg.scene_id
-            ? [...state.sceneHistory.slice(0, -1), msg]
-            : [...state.sceneHistory, msg];
+  processSessionSurface: (surface) =>
+    set((state) => ({
+      currentSurface: surface,
+      currentEnding: null,
+      currentImage: surface.image_prompt ? state.currentImage : null,
+      currentError: null,
+    })),
 
-        return {
-          currentScene: msg,
-          sceneHistory,
-          currentError: null,
-        };
-      }
-
-      // Increase fear based on scene intensity.
-      const fearIncrease = msg.intensity * 12;
-      return {
-        currentScene: msg,
-        sceneHistory: [...state.sceneHistory, msg],
-        currentImage:
-          state.currentImage?.scene_id === msg.scene_id ? state.currentImage : null,
-        fearLevel: Math.min(state.fearLevel + fearIncrease, state.maxFear),
-        currentError: null,
-      };
+  processEnding: (ending) =>
+    set({
+      currentEnding: ending,
+      currentError: null,
     }),
-
-  processPhaseChange: (msg) => set({ gamePhase: msg.to, currentError: null }),
 
   processMeta: (msg) => set({ currentMeta: msg, currentError: null }),
 
@@ -109,16 +73,23 @@ export const useGameStore = create<GameState>((set) => ({
 
   processImage: (msg) => set({ currentImage: msg, currentError: null }),
 
-  processReveal: (msg) =>
-    set({ revealData: msg, gamePhase: "reveal", currentError: null }),
-
   processError: (msg) => set({ currentError: msg }),
 
   clearError: () => set({ currentError: null }),
 
   setSelfieUrl: (url) => set({ selfieUrl: url }),
 
-  setCameraStepDone: () => set({ cameraStepDone: true }),
-
-  reset: () => set(initialState),
+  reset: () => {
+    persistSessionId(null);
+    set(initialState);
+  },
 }));
+
+function persistSessionId(id: string | null) {
+  if (typeof window === "undefined") return;
+  if (id) {
+    window.localStorage.setItem(SESSION_STORAGE_KEY, id);
+  } else {
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+  }
+}

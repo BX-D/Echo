@@ -161,11 +161,16 @@ impl FearProfile {
     /// }
     /// ```
     pub fn new() -> Self {
-        let scores: HashMap<FearType, f64> = FearType::all().into_iter().map(|f| (f, 0.5)).collect();
-        let confidence: HashMap<FearType, FearConfidence> =
-            FearType::all().into_iter().map(|f| (f, FearConfidence::new())).collect();
-        let recent_scores: HashMap<FearType, Vec<f64>> =
-            FearType::all().into_iter().map(|f| (f, vec![0.5])).collect();
+        let scores: HashMap<FearType, f64> =
+            FearType::all().into_iter().map(|f| (f, 0.5)).collect();
+        let confidence: HashMap<FearType, FearConfidence> = FearType::all()
+            .into_iter()
+            .map(|f| (f, FearConfidence::new()))
+            .collect();
+        let recent_scores: HashMap<FearType, Vec<f64>> = FearType::all()
+            .into_iter()
+            .map(|f| (f, vec![0.5]))
+            .collect();
 
         Self {
             scores,
@@ -216,15 +221,15 @@ impl FearProfile {
     /// assert!(p.confidence_level(&FearType::Darkness) < 0.5);
     /// ```
     pub fn confidence_level(&self, fear: &FearType) -> f64 {
-        self.confidence
-            .get(fear)
-            .map(|c| c.level())
-            .unwrap_or(0.0)
+        self.confidence.get(fear).map(|c| c.level()).unwrap_or(0.0)
     }
 
     /// Overall confidence (mean across all fears).
     pub fn overall_confidence(&self) -> f64 {
-        let sum: f64 = FearType::all().iter().map(|f| self.confidence_level(f)).sum();
+        let sum: f64 = FearType::all()
+            .iter()
+            .map(|f| self.confidence_level(f))
+            .sum();
         sum / FearType::all().len() as f64
     }
 
@@ -345,9 +350,8 @@ impl FearProfile {
             .as_ref()
             .map(|baseline| baseline.avg_choice_time_ms)
             .unwrap_or(4000.0);
-        let hesitation_bonus = ((time_to_decide_ms as f64 / baseline_choice_time) - 1.0)
-            .clamp(0.0, 1.0)
-            * 0.04;
+        let hesitation_bonus =
+            ((time_to_decide_ms as f64 / baseline_choice_time) - 1.0).clamp(0.0, 1.0) * 0.04;
         let approach_weight = match approach {
             ChoiceApproach::Investigate => 0.10,
             ChoiceApproach::Interact => 0.09,
@@ -577,8 +581,10 @@ impl FearProfile {
 
     /// Restores a fear profile from persisted session state.
     pub fn from_persisted_state(state: FearProfileState) -> Self {
-        let default_scores: HashMap<FearType, f64> =
-            FearType::all().into_iter().map(|fear| (fear, 0.5)).collect();
+        let default_scores: HashMap<FearType, f64> = FearType::all()
+            .into_iter()
+            .map(|fear| (fear, 0.5))
+            .collect();
         let default_confidence: HashMap<FearType, FearConfidence> = FearType::all()
             .into_iter()
             .map(|fear| (fear, FearConfidence::new()))
@@ -730,7 +736,10 @@ mod tests {
         }
         // After 25 observations, confidence should be high enough.
         let primary = p.primary_fear();
-        assert!(primary.is_some(), "expected a primary fear after 25 updates");
+        assert!(
+            primary.is_some(),
+            "expected a primary fear after 25 updates"
+        );
     }
 
     #[test]
@@ -802,7 +811,11 @@ mod tests {
             p.update(&fearful_features()).unwrap();
         }
         // Fearful features → anxiety should rise, curiosity should drop.
-        assert!(p.meta.anxiety_threshold > 0.5, "anxiety: {}", p.meta.anxiety_threshold);
+        assert!(
+            p.meta.anxiety_threshold > 0.5,
+            "anxiety: {}",
+            p.meta.anxiety_threshold
+        );
         assert!(
             p.meta.curiosity_vs_avoidance < 0.5,
             "curiosity: {}",
@@ -871,11 +884,7 @@ mod tests {
     #[test]
     fn test_apply_choice_signal_creates_score_separation() {
         let mut p = FearProfile::new();
-        p.apply_choice_signal(
-            FearType::Claustrophobia,
-            ChoiceApproach::Flee,
-            6_000,
-        );
+        p.apply_choice_signal(FearType::Claustrophobia, ChoiceApproach::Flee, 6_000);
 
         assert!(p.score(&FearType::Claustrophobia) > 0.5);
         assert!(p.score(&FearType::Claustrophobia) > p.score(&FearType::Isolation));

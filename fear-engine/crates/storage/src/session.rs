@@ -148,17 +148,28 @@ impl Database {
     /// let s = db.get_session(&id).unwrap();
     /// assert_eq!(s.current_scene_id, "hallway_02");
     /// ```
-    pub fn update_session_state(
-        &self,
-        id: &str,
-        scene_id: &str,
-        state_json: &str,
-    ) -> Result<()> {
+    pub fn update_session_state(&self, id: &str, scene_id: &str, state_json: &str) -> Result<()> {
         let now = format_timestamp(&Utc::now());
         let conn = self.get_conn()?;
         let rows = conn.execute(
             "UPDATE sessions SET current_scene_id = ?1, game_state_json = ?2, updated_at = ?3 WHERE id = ?4",
             params![scene_id, state_json, now, id],
+        )?;
+        if rows == 0 {
+            return Err(FearEngineError::NotFound {
+                entity: "Session".into(),
+                id: id.into(),
+            });
+        }
+        Ok(())
+    }
+
+    pub fn update_session_player_name(&self, id: &str, player_name: Option<&str>) -> Result<()> {
+        let now = format_timestamp(&Utc::now());
+        let conn = self.get_conn()?;
+        let rows = conn.execute(
+            "UPDATE sessions SET player_name = ?1, updated_at = ?2 WHERE id = ?3",
+            params![player_name, now, id],
         )?;
         if rows == 0 {
             return Err(FearEngineError::NotFound {
@@ -330,6 +341,15 @@ mod tests {
         let s = db.get_session(&id).unwrap();
         assert_eq!(s.current_scene_id, "hallway_02");
         assert!(s.game_state_json.contains("key"));
+    }
+
+    #[test]
+    fn test_update_session_player_name() {
+        let db = Database::new_in_memory().unwrap();
+        let id = db.create_session(None).unwrap();
+        db.update_session_player_name(&id, Some("Morgan")).unwrap();
+        let s = db.get_session(&id).unwrap();
+        assert_eq!(s.player_name.as_deref(), Some("Morgan"));
     }
 
     #[test]

@@ -185,7 +185,10 @@ pub enum ValidationWarning {
     /// A cycle was detected involving these scene IDs.
     Cycle { scene_ids: Vec<String> },
     /// A conditional target references a scene that does not exist.
-    MissingTarget { from_scene: String, target_id: String },
+    MissingTarget {
+        from_scene: String,
+        target_id: String,
+    },
 }
 
 /// Directed graph of [`Scene`] nodes connected by choices.
@@ -303,10 +306,12 @@ impl SceneGraph {
     /// assert!(g.get_scene("nope").is_err());
     /// ```
     pub fn get_scene(&self, id: &str) -> Result<&Scene> {
-        self.scenes.get(id).ok_or_else(|| FearEngineError::NotFound {
-            entity: "Scene".into(),
-            id: id.into(),
-        })
+        self.scenes
+            .get(id)
+            .ok_or_else(|| FearEngineError::NotFound {
+                entity: "Scene".into(),
+                id: id.into(),
+            })
     }
 
     /// Returns the IDs of every scene in the graph.
@@ -537,9 +542,7 @@ impl SceneGraph {
                         if let Some(pos) = path.iter().position(|p| *p == neighbor) {
                             let cycle: Vec<String> = path[pos..].to_vec();
                             if cycle.len() > 1 {
-                                warnings.push(ValidationWarning::Cycle {
-                                    scene_ids: cycle,
-                                });
+                                warnings.push(ValidationWarning::Cycle { scene_ids: cycle });
                             }
                         }
                     }
@@ -794,9 +797,7 @@ mod tests {
         ))
         .unwrap();
 
-        let target = g
-            .resolve_next_scene("a", "go", &default_context())
-            .unwrap();
+        let target = g.resolve_next_scene("a", "go", &default_context()).unwrap();
         match target {
             SceneTarget::Dynamic { context } => assert_eq!(context, "explore"),
             _ => panic!("expected Dynamic"),
@@ -850,9 +851,7 @@ mod tests {
             "a",
             SceneTarget::Conditional {
                 branches: vec![ConditionalTarget {
-                    condition: TransitionCondition::HasItem {
-                        item: "key".into(),
-                    },
+                    condition: TransitionCondition::HasItem { item: "key".into() },
                     target: "locked".into(),
                 }],
             },
@@ -943,9 +942,7 @@ mod tests {
             &ctx,
         ));
         assert!(!evaluate_condition(
-            &TransitionCondition::HasItem {
-                item: "key".into(),
-            },
+            &TransitionCondition::HasItem { item: "key".into() },
             &ctx,
         ));
     }
@@ -993,9 +990,9 @@ mod tests {
         g.add_scene(simple_scene("orphan")).unwrap();
 
         let warnings = g.validate().unwrap();
-        assert!(warnings
-            .iter()
-            .any(|w| matches!(w, ValidationWarning::OrphanScene { scene_id } if scene_id == "orphan")));
+        assert!(warnings.iter().any(
+            |w| matches!(w, ValidationWarning::OrphanScene { scene_id } if scene_id == "orphan")
+        ));
     }
 
     #[test]

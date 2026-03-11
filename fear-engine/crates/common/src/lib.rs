@@ -1,6 +1,6 @@
-//! # Fear Engine — Common
+//! # Echo Protocol — Common
 //!
-//! Shared types, error definitions, and configuration used across all Fear Engine crates.
+//! Shared types, error definitions, and configuration used across the Echo Protocol runtime crates.
 //! This crate provides the foundational domain types (fear categories, game phases, session IDs),
 //! a unified error type ([`FearEngineError`]), and application configuration.
 

@@ -340,10 +340,7 @@ mod tests {
             &history[0].event,
             GameEvent::SceneEntered { scene_id, .. } if scene_id == "a"
         ));
-        assert!(matches!(
-            &history[2].event,
-            GameEvent::PhaseChanged { .. }
-        ));
+        assert!(matches!(&history[2].event, GameEvent::PhaseChanged { .. }));
     }
 
     #[tokio::test]

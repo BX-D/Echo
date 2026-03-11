@@ -275,7 +275,7 @@ export default function GameScreen({
           <div className="flex items-center justify-between border-b border-bone/10 px-4 md:px-6 py-3 text-[11px] uppercase tracking-[0.35em] text-smoke/70">
             <div className="flex items-center gap-3">
               <span className="h-2 w-2 rounded-full bg-bone/70 animate-pulse" />
-              <span>Session Mirror</span>
+              <span>Echo Protocol</span>
               <span className="text-bone/80">/</span>
               <span>{actLabel}</span>
             </div>

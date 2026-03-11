@@ -93,6 +93,9 @@ describe("AudioEngine", () => {
     // Should not throw for known and unknown cues.
     engine.playCue("door_creak");
     engine.playCue("whisper");
+    engine.playCue("terminal_handshake");
+    engine.playCue("archive_click");
+    engine.playCue("heartbeat_countdown");
     engine.playCue("unknown_cue_name");
     engine.dispose();
   });

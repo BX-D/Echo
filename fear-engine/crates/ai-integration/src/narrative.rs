@@ -2,8 +2,7 @@
 //! parsing → validation → scene creation, with fallback to template scenes.
 
 use fear_engine_common::types::{
-    Atmosphere, Choice, ChoiceApproach, FearType, MetaBreak, MetaTarget,
-    NarrativeResponse,
+    Atmosphere, Choice, ChoiceApproach, FearType, MetaBreak, MetaTarget, NarrativeResponse,
 };
 use fear_engine_common::{FearEngineError, Result};
 use serde_json::Value;
@@ -143,17 +142,15 @@ pub fn parse_narrative_json(raw: &str) -> Result<NarrativeResponse> {
         trimmed
     };
 
-    let value: Value =
-        serde_json::from_str(json_str).map_err(|e| FearEngineError::Serialization(e.to_string()))?;
+    let value: Value = serde_json::from_str(json_str)
+        .map_err(|e| FearEngineError::Serialization(e.to_string()))?;
 
     let narrative = value["narrative"]
         .as_str()
         .ok_or_else(|| FearEngineError::AiGeneration("missing 'narrative' field".into()))?
         .to_string();
 
-    let atmosphere = parse_atmosphere(
-        value["atmosphere"].as_str().unwrap_or("dread"),
-    );
+    let atmosphere = parse_atmosphere(value["atmosphere"].as_str().unwrap_or("dread"));
 
     let sound_cue = value["sound_cue"].as_str().map(String::from);
     let image_prompt = value["image_prompt"].as_str().map(String::from);
@@ -293,9 +290,7 @@ pub fn validate_narrative(response: &NarrativeResponse) -> Result<()> {
         )));
     }
     if response.choices.is_empty() {
-        return Err(FearEngineError::AiGeneration(
-            "no choices provided".into(),
-        ));
+        return Err(FearEngineError::AiGeneration("no choices provided".into()));
     }
     Ok(())
 }
@@ -462,9 +457,10 @@ mod tests {
         let server = MockServer::start().await;
         Mock::given(method("POST"))
             .and(path("/v1/messages"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(
-                claude_response_body("This is not JSON at all."),
-            ))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(claude_response_body("This is not JSON at all.")),
+            )
             .mount(&server)
             .await;
 

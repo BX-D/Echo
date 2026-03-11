@@ -1,4 +1,4 @@
-/** The five sequential phases of a Fear Engine game session. */
+/** Legacy phase model retained for compatibility with the original storage schema. */
 export type GamePhase =
   | "calibrating"
   | "exploring"

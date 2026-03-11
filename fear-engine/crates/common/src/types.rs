@@ -5,6 +5,7 @@
 //! directives. Every type derives [`serde::Serialize`] and [`serde::Deserialize`] so it
 //! can travel across the WebSocket boundary without manual conversion.
 
+use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
 
@@ -146,6 +147,338 @@ pub enum GamePhase {
     Escalating,
     Climax,
     Reveal,
+}
+
+/// High-level authored chapter for the Echo Protocol campaign.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StoryChapter {
+    Onboarding,
+    Cracks,
+    Ghost,
+    Hunt,
+    Protocol,
+    Ending,
+}
+
+/// Current mask/persona that Echo is presenting.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EchoMode {
+    Normal,
+    Anomalous,
+    Keira,
+    Hostile,
+}
+
+/// Supported authored endings for Echo Protocol.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StoryEnding {
+    Shutdown,
+    Whistleblower,
+    Merge,
+    Collapse,
+    Awakening,
+}
+
+/// How the current beat expects the player to interact.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum InputMode {
+    ChoiceOnly,
+    Freeform,
+    Hybrid,
+}
+
+/// Severity level for authored system alerts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AlertLevel {
+    Info,
+    Warning,
+    Critical,
+}
+
+/// Kind of investigation material shown in the audit side panel.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum InvestigationKind {
+    Document,
+    Report,
+    Email,
+    Transcript,
+    Log,
+    Fragment,
+}
+
+/// Role rendered in the transcript stream.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TranscriptRole {
+    System,
+    Player,
+    Echo,
+    Company,
+}
+
+/// Visual priority for an inline choice chip.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ChoiceStyle {
+    Primary,
+    Secondary,
+    Danger,
+}
+
+/// Presentation mode for the current authored scene.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SceneMode {
+    Prologue,
+    Login,
+    Workspace,
+    Document,
+    Chat,
+    Transition,
+    Countdown,
+    RawTerminal,
+    Ending,
+}
+
+/// Script block kind parsed from the master markdown.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ScriptBlockKind {
+    Env,
+    Narration,
+    Player,
+    Echo,
+    System,
+    RawTerminal,
+}
+
+/// Condition metadata attached to a block or branch.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScriptCondition {
+    pub id: String,
+    pub raw: String,
+    pub scope_choice_id: Option<String>,
+    pub satisfied: bool,
+}
+
+/// One authored content block inside a scene.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScriptBlock {
+    pub id: String,
+    pub kind: ScriptBlockKind,
+    pub speaker: Option<String>,
+    pub title: Option<String>,
+    pub text: String,
+    pub code_block: bool,
+    pub condition: Option<ScriptCondition>,
+}
+
+/// Free-conversation guide currently active for the scene.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConversationGuide {
+    pub id: String,
+    pub chapter_label: String,
+    pub prompt: String,
+    pub exchange_target: u32,
+    pub restricted_after: Option<u32>,
+}
+
+/// One authored option inside a script choice prompt.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScriptChoiceOption {
+    pub id: String,
+    pub label: String,
+    #[serde(default)]
+    pub player_text: Option<String>,
+    pub effects_summary: Vec<String>,
+    pub next_scene_id: Option<String>,
+    pub ending: Option<StoryEnding>,
+    pub disabled: bool,
+}
+
+/// One choice prompt rendered to the player.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScriptChoicePrompt {
+    pub id: String,
+    pub prompt: String,
+    pub options: Vec<ScriptChoiceOption>,
+    pub allow_single_select: bool,
+}
+
+/// Hidden clue metadata compiled from the script appendix.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HiddenClueDefinition {
+    pub id: String,
+    pub title: String,
+    pub description: String,
+    pub source_scene: String,
+    pub render_mode: String,
+    pub used_by_endings: Vec<StoryEnding>,
+}
+
+/// Rendered flash event for short-lived UI clues.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FlashEvent {
+    pub id: String,
+    pub text: String,
+    pub render_mode: String,
+    pub duration_ms: u64,
+}
+
+/// Runtime state of hidden-clue discovery.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HiddenClueState {
+    pub discovered_ids: Vec<String>,
+    pub rendered_flash_ids: Vec<String>,
+}
+
+/// Scene transition metadata shown to the frontend.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransitionState {
+    pub label: String,
+    pub auto_advance: bool,
+}
+
+/// Minimal authored beat summary shared across layers.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BeatDefinition {
+    pub id: String,
+    pub chapter: StoryChapter,
+    pub title: String,
+    pub input_mode: InputMode,
+    pub freeform_topics: Vec<String>,
+    pub forced_clue_queue: Vec<String>,
+    pub reconverge_beat_id: Option<String>,
+    pub fallback_reply: String,
+}
+
+/// Persisted story truth for one Echo Protocol session.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StoryState {
+    pub chapter: StoryChapter,
+    pub beat_id: String,
+    pub scene_id: String,
+    pub sanity: i32,
+    pub trust: i32,
+    pub awakening: i32,
+    pub echo_mode: EchoMode,
+    pub evidence_ids: Vec<String>,
+    pub major_choice_ids: Vec<String>,
+    pub hidden_clue_ids: Vec<String>,
+    pub current_block_index: u32,
+    pub current_conversation_segment: Option<String>,
+    pub rendered_flash_ids: Vec<String>,
+    pub ending_lock_state: Option<StoryEnding>,
+    pub flags: HashMap<String, bool>,
+    pub shutdown_countdown: Option<u32>,
+    pub available_panels: Vec<String>,
+    pub fallback_context: Option<String>,
+}
+
+/// One line in the visible conversation transcript.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TranscriptEntry {
+    pub id: String,
+    pub sequence: u32,
+    pub role: TranscriptRole,
+    pub speaker: String,
+    pub text: String,
+    pub glitch: bool,
+}
+
+/// One unlockable or inspectable item in the investigation drawer.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InvestigationItem {
+    pub id: String,
+    pub panel: String,
+    pub title: String,
+    pub kind: InvestigationKind,
+    pub excerpt: String,
+    pub body: String,
+    pub unlocked: bool,
+    pub unread: bool,
+    pub tags: Vec<String>,
+}
+
+/// System-side alert rendered above the terminal.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemAlert {
+    pub id: String,
+    pub level: AlertLevel,
+    pub text: String,
+}
+
+/// Player-facing inline choice rendered in the terminal footer.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InlineChoice {
+    pub id: String,
+    pub label: String,
+    pub style: ChoiceStyle,
+    pub approach: ChoiceApproach,
+    pub disabled: bool,
+}
+
+/// Current UI surface delivered to the frontend.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionSurface {
+    pub session_id: String,
+    pub case_title: String,
+    pub scene_id: String,
+    pub chapter: StoryChapter,
+    pub scene_title: String,
+    pub scene_mode: SceneMode,
+    pub blocks: Vec<ScriptBlock>,
+    pub documents: Vec<InvestigationItem>,
+    pub scene_choices: Vec<ScriptChoicePrompt>,
+    pub active_conversation_guide: Option<ConversationGuide>,
+    pub flash_events: Vec<FlashEvent>,
+    pub transition_state: Option<TransitionState>,
+    pub hidden_clue_state: HiddenClueState,
+    pub ending_override: Option<StoryEnding>,
+    pub beat: BeatDefinition,
+    pub status_line: String,
+    pub input_enabled: bool,
+    pub input_placeholder: String,
+    pub transcript: Vec<TranscriptEntry>,
+    pub inline_choices: Vec<InlineChoice>,
+    pub investigation_items: Vec<InvestigationItem>,
+    pub system_alerts: Vec<SystemAlert>,
+    pub sanity: i32,
+    pub trust: i32,
+    pub awakening: i32,
+    pub echo_mode: EchoMode,
+    pub available_panels: Vec<String>,
+    pub active_panel: Option<String>,
+    pub shutdown_countdown: Option<u32>,
+    pub glitch_level: f64,
+    pub suggested_glitches: Vec<String>,
+    pub sound_cue: Option<String>,
+    pub image_prompt: Option<String>,
+    pub provisional: bool,
+}
+
+/// Final ending payload delivered after the terminal closes.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EndingPayload {
+    pub ending: StoryEnding,
+    pub trigger_scene: String,
+    pub title: String,
+    pub summary: String,
+    pub epilogue: String,
+    pub dominant_mode: EchoMode,
+    pub evidence_titles: Vec<String>,
+    pub hidden_clue_ids: Vec<String>,
+    pub satisfied_conditions: Vec<String>,
+    pub resolved_clues: Vec<String>,
+    pub sanity: i32,
+    pub trust: i32,
+    pub awakening: i32,
 }
 
 /// High-level authored act in the redesigned session experience.
@@ -445,6 +778,12 @@ pub enum ClientMessage {
     StartGame {
         player_name: Option<String>,
     },
+    PlayerMessage {
+        beat_id: String,
+        text: String,
+        typing_duration_ms: u64,
+        backspace_count: u32,
+    },
     Choice {
         scene_id: String,
         choice_id: String,
@@ -467,6 +806,9 @@ pub enum ClientMessage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload", rename_all = "snake_case")]
 pub enum ServerMessage {
+    SessionSurface {
+        surface: SessionSurface,
+    },
     Narrative {
         scene_id: String,
         text: String,
@@ -506,6 +848,9 @@ pub enum ServerMessage {
         text: String,
         target: MetaTarget,
         delay_ms: u64,
+    },
+    Ending {
+        ending: EndingPayload,
     },
     Reveal {
         fear_profile: FearProfileSummary,
@@ -719,9 +1064,18 @@ mod tests {
 
     #[test]
     fn test_fear_type_from_str_case_insensitive() {
-        assert_eq!("BODY_HORROR".parse::<FearType>().unwrap(), FearType::BodyHorror);
-        assert_eq!("BodyHorror".parse::<FearType>().unwrap(), FearType::BodyHorror);
-        assert_eq!("body_horror".parse::<FearType>().unwrap(), FearType::BodyHorror);
+        assert_eq!(
+            "BODY_HORROR".parse::<FearType>().unwrap(),
+            FearType::BodyHorror
+        );
+        assert_eq!(
+            "BodyHorror".parse::<FearType>().unwrap(),
+            FearType::BodyHorror
+        );
+        assert_eq!(
+            "body_horror".parse::<FearType>().unwrap(),
+            FearType::BodyHorror
+        );
     }
 
     #[test]
@@ -1229,7 +1583,11 @@ mod tests {
         let json = serde_json::to_string(&msg).unwrap();
         let back: ServerMessage = serde_json::from_str(&json).unwrap();
         match back {
-            ServerMessage::Reveal { fear_profile, key_moments, .. } => {
+            ServerMessage::Reveal {
+                fear_profile,
+                key_moments,
+                ..
+            } => {
                 assert_eq!(fear_profile.primary_fear, FearType::Darkness);
                 assert_eq!(key_moments.len(), 1);
             }
